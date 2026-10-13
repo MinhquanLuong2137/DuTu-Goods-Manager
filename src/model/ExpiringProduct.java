@@ -37,8 +37,8 @@ public class ExpiringProduct extends Product {
 
     //Constructor
 // Constructor
-    public ExpiringProduct(int ID, String name, double importPrice, double sellPrice, int quantity, LocalDate expiryDate) {
-        super(ID, name, importPrice, sellPrice, quantity);
+    public ExpiringProduct(int ID, String name, double importPrice, double sellPrice, int quantity,String location, LocalDate expiryDate) {
+        super(ID, name, importPrice, sellPrice, quantity, location);
         setExpiryDate(expiryDate);
     }
 

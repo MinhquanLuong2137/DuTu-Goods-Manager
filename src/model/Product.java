@@ -7,7 +7,7 @@ public abstract class Product {
     private double importPrice;
     private double sellPrice;
     private int quantity;
-
+    private String location;
 
     /*========Method=========*/
 
@@ -41,6 +41,9 @@ public abstract class Product {
         }
     }
 
+    public void setLocation(String location) {
+        this.location = location;
+    }
 
     //getter
     public int getID() {
@@ -63,6 +66,9 @@ public abstract class Product {
         return quantity;
     }
 
+    public String getLocation() {
+        return location;
+    }
     //print properties
     @Override
     public String toString() {
@@ -71,11 +77,12 @@ public abstract class Product {
     }
 
     //constructor
-    public Product(int ID, String name, double importPrice, double sellPrice, int quantity) {
+    public Product(int ID, String name, double importPrice, double sellPrice, int quantity,  String location) {
         setID(ID);
         setName(name);
         setImportPrice(importPrice);
         setSellPrice(sellPrice);
         setQuantity(quantity);
+        setLocation(location);
     }
 }
