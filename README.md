@@ -44,8 +44,16 @@ Quản lý phiên bản: Git & GitHub
 
 [x] Hoàn thiện lớp cơ sở trừu tượng Product 
 
-[ ] Xây dựng các lớp kế thừa chi tiết (Food, Beverage,...).
+[x] Xây dựng tầng Service xử lý nghiệp vụ quản lý.
 
-[ ] Xây dựng tầng Service xử lý nghiệp vụ quản lý.
+[x] Xây dựng menu tương tác người dùng (View).
 
-[ ] Xây dựng menu tương tác người dùng (View).
+[ ] Bổ sung các tính năng
+
+[ ] Hiệu chỉnh mã nguồn
+
+[ ] Xây dựng giao diện UI
+
+[ ] Cập nhật và cải thiện tính năng
+
+[ ] Hoàn thiện
