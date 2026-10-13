@@ -8,7 +8,7 @@ public abstract class Product {
     private double sellPrice;
     private int quantity;
     private String location;
-
+    private  int minStock;
     /*========Method=========*/
 
     //setter
@@ -20,17 +20,19 @@ public abstract class Product {
     }
 
     public void setName(String name) {
-        this.name = name;
+        if (name != null && !name.trim().isEmpty()) {
+            this.name = name.trim();
+        }
     }
 
     public void setImportPrice(double importPrice) {
-        if (importPrice > 0) {
+        if (importPrice >= 0) {
             this.importPrice = importPrice;
         }
     }
 
     public void setSellPrice(double sellPrice) {
-        if (sellPrice > 0) {
+        if (sellPrice >= 0) {
             this.sellPrice = sellPrice;
         }
     }
@@ -43,6 +45,12 @@ public abstract class Product {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public void setMinStock(int minStock) {
+        if (minStock >= 0) {
+            this.minStock = minStock;
+        }
     }
 
     //getter
@@ -69,12 +77,23 @@ public abstract class Product {
     public String getLocation() {
         return location;
     }
+
+    public int getMinStock() {
+        return minStock;
+    }
+
     //print properties
     @Override
     public String toString() {
-        return String.format("ID: %d | Ten: %-20s | Gia nhap: %,.0f | Gia ban: %,.0f | Ton: %d",
-                ID, name, importPrice, sellPrice, quantity);
+        return String.format("ID: %d | Ten: %-20s | Gia nhap: %,.0f | Gia ban: %,.0f | Ton: %d | Vi tri: %s | Canh bao: %d",
+                ID, name, importPrice, sellPrice, quantity, location != null ? location : "Chua ro", minStock);
     }
+    //extension
+    public boolean isLowStock() {
+        //Kiểm tra mức tồn kho đã chạm ngưỡng tối thiểu ?
+        return this.quantity <= this.minStock;
+    }
+
 
     //constructor
     public Product(int ID, String name, double importPrice, double sellPrice, int quantity,  String location) {
@@ -84,5 +103,12 @@ public abstract class Product {
         setSellPrice(sellPrice);
         setQuantity(quantity);
         setLocation(location);
+        setMinStock(5);
     }
+    public Product(int ID, String name, double importPrice, double sellPrice, int quantity,  String location, int minStock) {
+        this(ID, name, importPrice, sellPrice, quantity, location);
+        setMinStock(minStock);
+    }
+
+
 }

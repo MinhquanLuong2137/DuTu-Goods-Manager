@@ -22,5 +22,9 @@ public class GeneralProduct extends Product {
         super(ID, name, importPrice, sellPrice, quantity, location);
         setCategory(category);
     }
+    public GeneralProduct(int ID, String name, double importPrice, double sellPrice, int quantity,  String location, String category, int minStock) {
+        super(ID, name, importPrice, sellPrice, quantity, location, minStock);
+        setCategory(category);
+    }
 
 }

@@ -41,5 +41,8 @@ public class ExpiringProduct extends Product {
         super(ID, name, importPrice, sellPrice, quantity, location);
         setExpiryDate(expiryDate);
     }
-
+    public ExpiringProduct(int ID, String name, double importPrice, double sellPrice, int quantity,  String location, LocalDate expiryDate, int minStock) {
+        super(ID, name, importPrice, sellPrice, quantity, location, minStock);
+        setExpiryDate(expiryDate);
+    }
 }
