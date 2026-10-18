@@ -1,59 +1,117 @@
-# 🏪 DuTu Goods Manager
+# 🏪 DuTu - Hệ Thống Sổ Sách Điện Tử & Tra Giá Tạp Hóa
 
-[![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
-[![IDE](https://img.shields.io/badge/IntelliJ_IDEA-000000?style=for-the-badge&logo=intellij-idea&logoColor=white)](https://www.jetbrains.com/idea/)
-[![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white)](https://git-scm.com/)
-[![Status](https://img.shields.io/badge/Status-In_Development-blue?style=for-the-badge)](#)
+[![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
+[![Architecture](https://img.shields.io/badge/Architecture-3--Tier%20(MVC)-7B2869?style=for-the-badge)](#)
+[![UI Theme](https://img.shields.io/badge/UI%20Theme-Plum%20Pink%20%26%20Sand%20Gold-C84B83?style=for-the-badge)](#)
+[![Status](https://img.shields.io/badge/Status-Demo%20Ready-1F8A5B?style=for-the-badge)](#)
 
-Hệ thống phần mềm quản lý hàng hóa và tồn kho dành cho cửa hàng tạp hóa / tiện lợi của gia đình, nhằm số hóa quy trình ghi chép sổ sách thủ công.
-
----
-
-## 📌 Tính năng chính (Dự kiến)
-
-- 📦 **Quản lý sản phẩm**: Thêm, sửa, xóa, tìm kiếm hàng hóa theo danh mục.
-- 💰 **Quản lý giá & tồn kho**: Cảnh báo hết hàng, quản lý giá nhập và giá bán lẻ.
-- 📊 **Thống kê doanh thu**: Báo cáo xuất/nhập/tồn kho cơ bản.
-- 💾 **Lưu trữ dữ liệu**: Đồng bộ dữ liệu ra tệp tin để tránh mất mát khi tắt máy.
+**DuTu** là giải pháp phần mềm sổ sách điện tử và tra cứu giá thông minh dành riêng cho cửa hàng tạp hóa / bách hóa gia đình. Hệ thống được tối ưu hóa cho đối tượng người dùng lớn tuổi (phụ huynh), thay thế phương pháp tính tiền rườm rà từng đơn hàng bằng cơ chế **Kiểm đếm kệ định kỳ (FIFO)** và **Bộ 4 Cuốn Sổ Điện Tử** trực quan.
 
 ---
 
-## 🏗️ Cấu trúc kiến trúc (Package Architecture)
+## 🌸 Điểm Nổi Bật & Triết Lý Thiết Kế
 
-Dự án áp dụng mô hình phân tách logic và hướng đối tượng (OOP):
+- **Chữ to, màu sắc rõ ràng:** Giao diện Web UI mang bảng màu chủ đạo **Tím Hồng & Vàng Cát** (`#7B2869` & `#E6C280`), nút bấm kích thước lớn, tương thích hoàn hảo trên máy tính và máy tính bảng tại quầy.
+- **Tra giá nhanh không dấu:** Thuật toán chuẩn hóa tiếng Việt (`Normalizer`) hỗ trợ gõ không dấu (*"nuoc"*, *"mi"*, *"bong den"*) ra kết quả tức thì.
+- **Cơ chế kiểm kê FIFO:** Tự động trừ tồn kho theo lô hạn sử dụng cũ nhất khi đếm kệ cuối ngày/cuối tuần, tự động suy ra lượng hàng đã bán mà không cần tạo hóa đơn bán lẻ rườm rà.
+- **Hai chế độ nhập giá vốn:** Hỗ trợ nhập giá vốn chia theo đơn vị lẻ hoặc nhập tổng tiền "nguyên cục/nguyên thùng" (máy tự động chia đều).
+- **An toàn dữ liệu:** Tích hợp hộp thoại xác nhận trước các thao tác nguy hiểm (xóa hàng, xóa kệ, trả nợ) cùng thùng rác lưu trữ 20 khoản nợ đã xóa gần đây.
+
+---
+
+## 📌 Bộ Tính Năng Chính
+
+### 1. 🔍 Tra Giá Nhanh & Quản Lý Kho Hàng
+- Tra cứu song song **Giá bán lẻ** và **Giá bán thùng / bán sỉ** kèm ghi chú quy cách (*"Thùng 24 lon"*).
+- Lọc danh sách mặt hàng tức thì theo từng **Vị trí Kệ / Tủ** trưng bày.
+- Quản lý linh hoạt: Thêm mới, chỉnh sửa thông tin chi tiết, đổi tên kệ hàng loạt hoặc xóa kệ trống.
+
+### 2. 📋 Đếm Kệ Thực Tế & Nhập Hàng (Quản lý Lô HSD FIFO)
+- **Đếm kệ định kỳ:** Chọn kệ đang đứng, gõ số lượng đếm thực tế $\rightarrow$ Hệ thống tự động tính: $\text{Số lượng bán} = \text{Tồn cũ} - \text{Tồn đếm}$.
+- **Nhập hàng đại lý:** Cộng dồn số lượng, chọn chế độ nhập giá vốn và ghi nhận ngày hết hạn (HSD) cho từng lô hàng mới.
+
+### 3. ⚠️ Sổ Cảnh Báo & Thống Kê Bán Chạy / Hàng Ế
+- **Sổ Hàng Sắp Hết:** Cảnh báo các mặt hàng chạm hoặc dưới ngưỡng tồn kho tối thiểu (`minStock`).
+- **Sổ Cảnh Báo HSD:** Báo đỏ các sản phẩm có HSD lô gần nhất còn dưới 14 ngày hoặc đã hết hạn.
+- **Sổ Hàng Ế (Slow-Moving):** Phát hiện các mặt hàng đứng hàng $\ge 60$ ngày không có lượt bán.
+- **Top Bán Chạy:** Xếp hạng các mặt hàng đắt khách nhất cửa hàng.
+
+### 4. 📓 Sổ Nợ Khách Hàng (Kèm Thùng Rác Khôi Phục)
+- Ghi nhận chi tiết: Tên khách, SĐT/địa chỉ, ngày giờ cụ thể, số tiền nợ riêng biệt và ghi chú mặt hàng tự do.
+- Hỗ trợ chỉnh sửa/cộng dồn khoản nợ trực tiếp nếu ghi nhầm.
+- **Thùng rác Nợ:** Lưu trữ 20 khoản nợ đã thanh toán/xóa gần đây, cho phép khôi phục về sổ chính chỉ với 1 cú nhấp chuột.
+
+### 5. 💰 Sổ Cộng Tiền Cuối Ngày & Báo Cáo Doanh Thu
+- Ghi nhận tiền mặt ngăn kéo, tiền chuyển khoản và tiền chi trả nhập hàng trong ngày.
+- Tự động tính **Thực thu ròng**: Hiển thị màu xanh khi có lãi và **màu đỏ rực (`⚠️ -`)** khi chi nhập hàng lớn hơn thu.
+- Tổng kết doanh thu trực quan tích lũy qua tất cả các ngày chốt sổ.
+
+---
+
+## 🏗️ Cấu Trúc Kiến Trúc (3-Tier Architecture)
+
+Dự án tuân thủ nghiêm ngặt mô hình phân tách nghiệp vụ và nguyên lý Hướng đối tượng (OOP - Encapsulation, Inheritance, Polymorphism, Abstraction):
 
 ```text
 src/
-├── model/        # Các lớp thực thể dữ liệu (Product, Food, Beverage, ...)
-├── service/      # Nghiệp vụ xử lý logic và tính toán (chức năng quản lý kho)
-└── view/         # Giao diện tương tác người dùng (CLI / Console, mở rộng GUI sau này)
+├── model/                  # Tầng Thực thể Dữ liệu (Domain Entities)
+│   ├── Product.java        # Lớp trừu tượng sản phẩm cơ sở (Giá sỉ, kệ, tồn kho, lô HSD)
+│   ├── ExpiringProduct.java# Sản phẩm có Hạn Sử Dụng (Kế thừa từ Product)
+│   ├── GeneralProduct.java # Sản phẩm bách hóa chung (Kế thừa từ Product)
+│   ├── ExpiryBatch.java    # Lớp quản lý lô HSD phục vụ cơ chế FIFO
+│   ├── DebtRecord.java     # Sổ nợ khách hàng (Ngày giờ, chi tiết nợ, trạng thái)
+│   ├── StockLog.java       # Lịch sử kiểm kê kệ & nhập hàng
+│   └── DailyClosing.java   # Sổ cộng tiền chốt doanh thu cuối ngày
+├── service/                # Tầng Xử lý Nghiệp vụ Logic (Business Layer)
+│   ├── ProductService.java # Logic quản lý kho, tìm kiếm không dấu, lọc kệ, xử lý FIFO
+│   └── LedgerService.java  # Logic quản lý bộ sổ điện tử (Nợ, Thùng rác 20 mục, Chốt sổ)
+└── view/                   # Tầng Giao diện Người dùng (Presentation Layer)
+    ├── DuTuWebView.java    # Embedded Web UI (Tím Hồng & Vàng Cát, HTTP Server)
+    └── ProductView.java    # Console View (Menu tương tác dòng lệnh)
+
 ```
-## 🛠️ Công nghệ sử dụng
-Ngôn ngữ: Java Core (JDK 17+)
 
-Mô hình lập trình: Hướng đối tượng (OOP - Encapsulation, Abstraction, Inheritance, Polymorphism)
+## 🛠️ Công Nghệ Sử Dụng
 
-Công cụ phát triển: IntelliJ IDEA
+- **Ngôn ngữ:** Java Core (JDK 17+)
+- **Server Web:** Embedded `com.sun.net.httpserver.HttpServer` (Không dùng framework nặng, khởi động cực nhanh)
+- **Giao diện:** HTML5, CSS3 Custom Properties, JavaScript ES6 (Inline SVG Icons)
+- **Công cụ phát triển:** IntelliJ IDEA
+- **Quản lý phiên bản:** Git & GitHub
 
-Quản lý phiên bản: Git & GitHub
+---
 
-## 🚀 Tiến độ hiện tại
-[x] Khởi tạo cấu trúc dự án & thiết lập .gitignore chuẩn.
+## 🚀 Hướng Dẫn Khởi Chạy
 
-[x] Kết nối và đồng bộ kho lưu trữ với GitHub.
+### 1. Yêu cầu hệ thống
+- Máy tính đã cài đặt **JDK 17** hoặc cao hơn.
+- Trình duyệt web bất kỳ (Chrome, Edge, Firefox).
 
-[x] Hoàn thiện lớp cơ sở trừu tượng Product 
+### 2. Các bước khởi chạy
+1. Clone dự án về máy:
+   ```bash
+   git clone [https://github.com/your-username/dutu-goods-manager.git](https://github.com/your-username/dutu-goods-manager.git)
+   cd dutu-goods-manager
+   ```
 
-[x] Xây dựng tầng Service xử lý nghiệp vụ quản lý.
+2. Mở dự án bằng IntelliJ IDEA.
 
-[x] Xây dựng menu tương tác người dùng (View).
+3. Chạy file src/Main.java.
 
-[ ] Bổ sung các tính năng
+- Ứng dụng sẽ tự động nạp dữ liệu mẫu thực tế và mở giao diện Web tại địa chỉ:
 
-[ ] Hiệu chỉnh mã nguồn
+    ```bash
+    http://localhost:8080
+    ```
+  (Đồng thời, bạn vẫn có thể thao tác song song từ Terminal nhờ giao diện Console View).
 
-[ ] Xây dựng giao diện UI
+## 📋 Trạng Thái Phát Triển (Roadmap)
 
-[ ] Cập nhật và cải thiện tính năng
-
-[ ] Hoàn thiện
+- [x] Thiết kế kiến trúc 3 tầng (Model - Service - View) & Hoàn thiện mô hình OOP.
+- [x] Xây dựng logic quản lý tồn kho, tìm kiếm tiếng Việt không dấu & lọc theo kệ.
+- [x] Xây dựng bộ 4 Cuốn Sổ Điện Tử (Cảnh báo, Đếm kệ/Nhập hàng, Sổ nợ, Sổ cuối ngày).
+- [x] Triển khai giao diện Web UI tông Tím Hồng & Vàng Cát với SVG Icon chuẩn thương hiệu.
+- [x] Xử lý cơ chế lô HSD theo chuẩn FIFO & Thùng rác khôi phục nợ 20 mục.
+- [x] Tích hợp cảnh báo an toàn (`confirm`) & hỗ trợ 2 chế độ nhập giá vốn.
+- [x] Tích hợp Module lưu trữ dữ liệu tự động ra tệp tin JSON/Text đĩa cục bộ.
+- [x] Đóng gói phần mềm thành file thực thi `.exe` / `.jar` chạy 1-click cho người dùng cuối.
