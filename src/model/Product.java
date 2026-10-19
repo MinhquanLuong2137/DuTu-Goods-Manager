@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 public abstract class Product {
+    /*==============Properties*================*/
     private int ID;
     private String name;
     private double importPrice;
@@ -22,6 +23,8 @@ public abstract class Product {
 
     private int totalSold;
     private LocalDate lastActiveDate;
+
+    /*=============setters and getters===============*/
 
     public void setID(int ID) { if (ID > 0) this.ID = ID; }
     public void setName(String name) { if (name != null && !name.trim().isEmpty()) this.name = name.trim(); }
@@ -64,6 +67,17 @@ public abstract class Product {
     public int getTotalSold() { return totalSold; }
     public LocalDate getLastActiveDate() { return lastActiveDate; }
     public List<ExpiryBatch> getExpiryBatches() { return expiryBatches; }
+
+    /*==================Functional Methods====================*/
+
+    public void addSoldQuantity(int sold) {
+        if (sold > 0) {
+            this.totalSold += sold;
+            this.lastActiveDate = LocalDate.now();
+            reduceBatchQuantity(sold); // Trừ hàng theo nguyên tắc FIFO (lô hết hạn gần nhất)
+        }
+    }
+
 
     public void addBatch(LocalDate expiryDate, int qty) {
         if (qty <= 0) return;
@@ -130,6 +144,8 @@ public abstract class Product {
         this.lastActiveDate = LocalDate.now();
     }
 
+
+    //Constructor
     public Product(int ID, String name, double importPrice, double sellPrice, int quantity, String location, int minStock) {
         this(ID, name, importPrice, sellPrice, quantity, location);
         setMinStock(minStock);
