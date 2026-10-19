@@ -4,10 +4,10 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 public class ExpiringProduct extends Product {
-    //Property
+    /*===============Property====================*/
     private LocalDate  expiryDate;
 
-    //Getter and setter
+    /*===============Getter and setter===============*/
     public LocalDate getExpiryDate() {
         return expiryDate;
     }
@@ -21,7 +21,7 @@ public class ExpiringProduct extends Product {
         return super.toString() + String.format(" | HSD: %s", expiryDate != null ? expiryDate.toString() : "N/A");
     }
 
-    //Method
+    /*===================Method=====================*/
     public boolean isExpired() {
         return this.expiryDate != null && getDaysUntilExpiry() < 0;
     }
@@ -36,7 +36,7 @@ public class ExpiringProduct extends Product {
 
 
     //Constructor
-// Constructor
+
     public ExpiringProduct(int ID, String name, double importPrice, double sellPrice, int quantity,String location, LocalDate expiryDate) {
         super(ID, name, importPrice, sellPrice, quantity, location);
         setExpiryDate(expiryDate);
