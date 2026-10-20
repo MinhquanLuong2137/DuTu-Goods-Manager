@@ -10,9 +10,11 @@ import java.util.regex.Pattern;
 
 public class ProductService {
     private final List<Product> inventory;
+    private final Set<String> locations;
 
     public ProductService() {
         inventory = new ArrayList<>();
+        locations = new LinkedHashSet<>();
     }
 
     /* Thuật toán bỏ dấu tiếng Việt để tìm kiếm không dấu (VD: "nuoc" -> "nuoc", "nước" -> "nuoc") */
@@ -29,6 +31,7 @@ public class ProductService {
         if (product == null || findById(product.getID()) != null) {
             return false;
         }
+        locations.add(product.getLocation());
         return inventory.add(product);
     }
 
@@ -110,6 +113,7 @@ public class ProductService {
         target.setUnitNote(unitNote);
         target.setQuantity(quantity);
         target.setLocation(location);
+        if (location != null && !location.isBlank()) locations.add(location.trim());
         target.setMinStock(minStock);
 
         if (target instanceof ExpiringProduct ep && expiryDate != null) {
@@ -157,6 +161,7 @@ public class ProductService {
 
     public List<String> getAllLocations() {
         Set<String> locations = new LinkedHashSet<>();
+        locations.addAll(this.locations);
         for (Product p : inventory) {
             if (p.getLocation() != null && !p.getLocation().isBlank()) {
                 locations.add(p.getLocation());
@@ -168,14 +173,42 @@ public class ProductService {
     /* Đổi tên kệ hàng loạt (Ví dụ đổi "Ke A1" -> "Ke Banh Keo") */
     public int renameLocation(String oldName, String newName) {
         if (oldName == null || newName == null || newName.isBlank()) return 0;
+        String previousName = findLocation(oldName);
+        if (previousName == null) return 0;
+        String trimmedNewName = newName.trim();
+        locations.remove(previousName);
+        locations.add(trimmedNewName);
         int count = 0;
         for (Product p : inventory) {
             if (oldName.equalsIgnoreCase(p.getLocation())) {
-                p.setLocation(newName.trim());
+                p.setLocation(trimmedNewName);
                 count++;
             }
         }
         return count;
+    }
+
+    public boolean addLocation(String name) {
+        if (name == null || name.isBlank() || findLocation(name) != null) return false;
+        locations.add(name.trim());
+        return true;
+    }
+
+    public boolean removeLocation(String name) {
+        String existingName = findLocation(name);
+        if (existingName == null || !findByLocation(existingName).isEmpty()) return false;
+        return locations.remove(existingName);
+    }
+
+    private String findLocation(String name) {
+        if (name == null) return null;
+        for (String location : locations) {
+            if (location.equalsIgnoreCase(name.trim())) return location;
+        }
+        for (Product product : inventory) {
+            if (product.getLocation().equalsIgnoreCase(name.trim())) return product.getLocation();
+        }
+        return null;
     }
 
     public List<Product> findByLocation(String location) {

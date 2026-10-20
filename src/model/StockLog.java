@@ -39,6 +39,9 @@ public class StockLog {
     public double getUnitPrice() { return unitPrice; }
     public String getNote() { return note; }
     public LocalDateTime getTimestamp() { return timestamp; }
+    public void setTimestamp(LocalDateTime timestamp) {
+        if (timestamp != null) this.timestamp = timestamp;
+    }
 
     public String getFormattedTime() {
         return timestamp.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));

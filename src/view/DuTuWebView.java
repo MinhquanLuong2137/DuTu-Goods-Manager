@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import model.*;
 import service.LedgerService;
+import service.PersistenceService;
 import service.ProductService;
 
 import java.awt.Desktop;
@@ -118,6 +119,7 @@ public class DuTuWebView {
             newProduct.setWholesalePrice(wholesalePrice);
             newProduct.setUnitNote(unitNote);
             productService.addProduct(newProduct);
+            PersistenceService.saveData(productService, ledgerService, null);
 
             redirect(exchange, "tra-gia", "ALL", "Đã thêm mặt hàng thành công: " + name);
         } catch (Exception e) {
@@ -141,6 +143,7 @@ public class DuTuWebView {
         LocalDate expDate = (expStr != null && !expStr.isBlank()) ? LocalDate.parse(expStr) : null;
 
         if (productService.updateFullProduct(id, name, importPrice, sellPrice, wholesalePrice, unitNote, quantity, location, minStock, expDate)) {
+            PersistenceService.saveData(productService, ledgerService, null);
             redirect(exchange, "tra-gia", "ALL", "Đã cập nhật mặt hàng #" + id);
         } else {
             redirect(exchange, "tra-gia", "ALL", "Không thể cập nhật mặt hàng!");
@@ -151,6 +154,7 @@ public class DuTuWebView {
         Map<String, String> form = parseForm(exchange);
         int id = parseIntOrDefault(form.get("id"), -1);
         if (productService.removeProduct(id)) {
+            PersistenceService.saveData(productService, ledgerService, null);
             redirect(exchange, "tra-gia", "ALL", "Đã xóa mặt hàng #" + id);
         } else {
             redirect(exchange, "tra-gia", "ALL", "Không tìm thấy mặt hàng cần xóa!");
@@ -160,8 +164,11 @@ public class DuTuWebView {
     private void handleAddShelf(HttpExchange exchange) throws IOException {
         Map<String, String> form = parseForm(exchange);
         String shelfName = form.getOrDefault("shelfName", "").trim();
-        if (!shelfName.isEmpty()) {
+        if (productService.addLocation(shelfName)) {
+            PersistenceService.saveData(productService, ledgerService, null);
             redirect(exchange, "tra-gia", "ALL", "Đã tạo kệ mới: " + shelfName);
+        } else if (!shelfName.isEmpty()) {
+            redirect(exchange, "tra-gia", "ALL", "Kệ đã tồn tại: " + shelfName);
         } else {
             redirect(exchange, "tra-gia", "ALL", "Tên kệ không được để trống!");
         }
@@ -171,8 +178,9 @@ public class DuTuWebView {
         Map<String, String> form = parseForm(exchange);
         String oldName = form.getOrDefault("oldName", "").trim();
         String newName = form.getOrDefault("newName", "").trim();
-        if (!oldName.isEmpty() && !newName.isEmpty()) {
+        if (!oldName.isEmpty() && !newName.isEmpty() && productService.getAllLocations().stream().anyMatch(s -> s.equalsIgnoreCase(oldName))) {
             int count = productService.renameLocation(oldName, newName);
+            PersistenceService.saveData(productService, ledgerService, null);
             redirect(exchange, "tra-gia", "ALL", "Đã đổi tên kệ [" + oldName + "] thành [" + newName + "] (" + count + " mặt hàng)");
         } else {
             redirect(exchange, "tra-gia", "ALL", "Vui lòng nhập tên kệ hợp lệ!");
@@ -182,11 +190,14 @@ public class DuTuWebView {
     private void handleDeleteShelf(HttpExchange exchange) throws IOException {
         Map<String, String> form = parseForm(exchange);
         String shelfName = form.getOrDefault("shelfName", "").trim();
-        int count = productService.findByLocation(shelfName).size();
-        if (count > 0) {
+        if (!productService.findByLocation(shelfName).isEmpty()) {
+            int count = productService.findByLocation(shelfName).size();
             redirect(exchange, "tra-gia", "ALL", "Không thể xóa kệ [" + shelfName + "] vì còn chứa " + count + " mặt hàng!");
-        } else {
+        } else if (productService.removeLocation(shelfName)) {
+            PersistenceService.saveData(productService, ledgerService, null);
             redirect(exchange, "tra-gia", "ALL", "Đã xóa kệ trống: " + shelfName);
+        } else {
+            redirect(exchange, "tra-gia", "ALL", "Không tìm thấy kệ: " + shelfName);
         }
     }
 
@@ -202,6 +213,7 @@ public class DuTuWebView {
             int oldQty = p.getQuantity();
             int soldQty = productService.auditStockCount(id, actualCount);
             ledgerService.logAudit(p, oldQty, actualCount, soldQty, note);
+            PersistenceService.saveData(productService, ledgerService, null);
             redirect(exchange, "kiem-ke", shelf, "Đã chốt đếm [" + p.getName() + "]: Tồn mới = " + actualCount);
         } else {
             redirect(exchange, "kiem-ke", shelf, "Số lượng đếm không hợp lệ!");
@@ -229,6 +241,7 @@ public class DuTuWebView {
                 p.addBatch(expDate, addedQty);
             }
             ledgerService.logRestock(p, oldQty, addedQty, importPrice, note);
+            PersistenceService.saveData(productService, ledgerService, null);
             redirect(exchange, "kiem-ke", shelf, "Đã nhập thêm +" + addedQty + " [" + p.getName() + "] vào kho!");
         } else {
             redirect(exchange, "kiem-ke", shelf, "Vui lòng nhập số lượng hàng về lớn hơn 0!");
@@ -244,6 +257,7 @@ public class DuTuWebView {
 
         if (!customerName.isEmpty() && amount > 0) {
             ledgerService.addDebt(customerName, phoneOrAddress, itemsNote, amount);
+            PersistenceService.saveData(productService, ledgerService, null);
             redirect(exchange, "so-no", "ALL", "Đã ghi sổ nợ cho: " + customerName);
         } else {
             redirect(exchange, "so-no", "ALL", "Vui lòng nhập tên khách và số tiền nợ!");
@@ -259,6 +273,7 @@ public class DuTuWebView {
         double amount = parseDoubleOrDefault(form.get("amount"), 0);
 
         if (ledgerService.updateDebt(debtId, customerName, phoneOrAddress, itemsNote, amount)) {
+            PersistenceService.saveData(productService, ledgerService, null);
             redirect(exchange, "so-no", "ALL", "Đã cập nhật thông tin khoản nợ #" + debtId);
         } else {
             redirect(exchange, "so-no", "ALL", "Không tìm thấy khoản nợ cần sửa!");
@@ -269,6 +284,7 @@ public class DuTuWebView {
         Map<String, String> form = parseForm(exchange);
         int debtId = parseIntOrDefault(form.get("debtId"), -1);
         if (ledgerService.markDebtPaidOrRemove(debtId)) {
+            PersistenceService.saveData(productService, ledgerService, null);
             redirect(exchange, "so-no", "ALL", "Đã thanh toán và chuyển khoản nợ #" + debtId + " vào thùng rác gần đây.");
         } else {
             redirect(exchange, "so-no", "ALL", "Không tìm thấy khoản nợ!");
@@ -279,6 +295,7 @@ public class DuTuWebView {
         Map<String, String> form = parseForm(exchange);
         int debtId = parseIntOrDefault(form.get("debtId"), -1);
         if (ledgerService.restoreDebtFromTrash(debtId)) {
+            PersistenceService.saveData(productService, ledgerService, null);
             redirect(exchange, "so-no", "ALL", "Đã khôi phục khoản nợ #" + debtId + " về sổ chính.");
         } else {
             redirect(exchange, "so-no", "ALL", "Không thể khôi phục khoản nợ!");
@@ -295,6 +312,7 @@ public class DuTuWebView {
         String note = form.getOrDefault("note", "");
 
         ledgerService.addDailyClosing(date, cash, transfer, expense, note);
+        PersistenceService.saveData(productService, ledgerService, null);
         redirect(exchange, "so-cuoi-ngay", "ALL", "Đã lưu sổ cộng tiền ngày " + date);
     }
 

@@ -98,7 +98,7 @@ src/
 
 3. Chạy file src/Main.java.
 
-- Ứng dụng sẽ tự động nạp dữ liệu mẫu thực tế và mở giao diện Web tại địa chỉ:
+- Ứng dụng sẽ nạp dữ liệu hiện có từ `dutu_database.json` trong thư mục chạy. Chỉ lần chạy đầu tiên mới tạo dữ liệu mẫu; các thay đổi được tự động lưu vào tệp này. Giao diện Web mở tại địa chỉ:
 
     ```bash
     http://localhost:8080

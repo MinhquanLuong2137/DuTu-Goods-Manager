@@ -3,6 +3,8 @@ package view;
 import model.ExpiringProduct;
 import model.GeneralProduct;
 import model.Product;
+import service.LedgerService;
+import service.PersistenceService;
 import service.ProductService;
 
 import java.time.LocalDate;
@@ -13,11 +15,13 @@ import java.util.Scanner;
 public class ProductView {
     /*========Property========*/
     private final ProductService productService;
+    private final LedgerService ledgerService;
     private final Scanner scanner;
     /*=========Method========*/
     //constructor
-    public ProductView(ProductService productService) {
+    public ProductView(ProductService productService, LedgerService ledgerService) {
         this.productService = productService;
+        this.ledgerService = ledgerService;
         this.scanner = new Scanner(System.in);
     }
 
@@ -138,6 +142,7 @@ public class ProductView {
                 String category = scanner.nextLine().trim();
                 productService.addProduct(new GeneralProduct(id, name, importPrice, sellPrice, quantity, location, category, minStock));
             }
+            PersistenceService.saveData(productService, ledgerService, null);
             System.out.println("[+] Them san pham thanh cong!");
         } catch (NumberFormatException e) {
             System.out.println("[!] Loi: Vui long nhap dung dinh dang so!");
@@ -163,6 +168,7 @@ public class ProductView {
             double newSell = Double.parseDouble(scanner.nextLine().trim());
 
             if (productService.updatePrices(id, newImport, newSell)) {
+                PersistenceService.saveData(productService, ledgerService, null);
                 System.out.println("[+] Cap nhat gia thanh cong!");
             } else {
                 System.out.println("[!] Cap nhat that bai (gia phai >= 0)!");
@@ -210,6 +216,7 @@ public class ProductView {
         try {
             int id = Integer.parseInt(scanner.nextLine().trim());
             if (productService.removeProduct(id)) {
+                PersistenceService.saveData(productService, ledgerService, null);
                 System.out.println("[+] Da xoa san pham ID " + id);
             } else {
                 System.out.println("[!] Khong tim thay san pham voi ID " + id);

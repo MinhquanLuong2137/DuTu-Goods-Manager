@@ -82,6 +82,26 @@ public class LedgerService {
     public List<DebtRecord> getAllDebts() { return new ArrayList<>(debtBook); }
     public List<DebtRecord> getDeletedDebtTrash() { return new ArrayList<>(deletedDebtTrash); }
 
+    public void loadDebt(DebtRecord debt) {
+        debtBook.add(debt);
+        debtIdSeq = Math.max(debtIdSeq, debt.getId() + 1);
+    }
+
+    public void loadDeletedDebt(DebtRecord debt) {
+        deletedDebtTrash.add(debt);
+        debtIdSeq = Math.max(debtIdSeq, debt.getId() + 1);
+    }
+
+    public void loadStockLog(StockLog log) {
+        stockLogs.add(log);
+        logIdSeq = Math.max(logIdSeq, log.getId() + 1);
+    }
+
+    public void loadDailyClosing(DailyClosing closing) {
+        dailyClosings.add(closing);
+        closingIdSeq = Math.max(closingIdSeq, closing.getId() + 1);
+    }
+
     public double getTotalUnpaidDebt() {
         double total = 0;
         for (DebtRecord d : debtBook) {

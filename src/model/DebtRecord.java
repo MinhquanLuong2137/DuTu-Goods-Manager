@@ -32,6 +32,10 @@ public class DebtRecord {
     public boolean isPaid() { return paid; }
 
     // Setters (Đã bổ sung đầy đủ để sửa lỗi)
+    public void setId(int id) { this.id = id; }
+    public void setCreatedAt(LocalDateTime createdAt) {
+        if (createdAt != null) this.createdAt = createdAt;
+    }
     public void setCustomerName(String customerName) {
         if (customerName != null && !customerName.isBlank()) {
             this.customerName = customerName.trim();

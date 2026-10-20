@@ -70,15 +70,6 @@ public abstract class Product {
 
     /*==================Functional Methods====================*/
 
-    public void addSoldQuantity(int sold) {
-        if (sold > 0) {
-            this.totalSold += sold;
-            this.lastActiveDate = LocalDate.now();
-            reduceBatchQuantity(sold); // Trừ hàng theo nguyên tắc FIFO (lô hết hạn gần nhất)
-        }
-    }
-
-
     public void addBatch(LocalDate expiryDate, int qty) {
         if (qty <= 0) return;
         if (expiryDate != null) {

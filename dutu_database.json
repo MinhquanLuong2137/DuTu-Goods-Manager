@@ -1,0 +1,52 @@
+{
+  "initialized": true,
+  "locations": ["Tủ lạnh", "Kê 1j", "Kệ rau củ"],
+  "products": [
+    {
+      "id": 2,
+      "name": "Nước rửa chén Sunlight 750g",
+      "importPrice": 24000.0,
+      "sellPrice": 30000.0,
+      "wholesalePrice": 330000.0,
+      "unitNote": "Lẻ: Chai | Thùng: 12 chai",
+      "quantity": 15,
+      "location": "Kệ rau củ",
+      "minStock": 5,
+      "totalSold": 47,
+      "lastActiveDate": "2026-10-20",
+      "type": "GENERAL",
+      "category": "Gia dụng",
+      "expiryBatches": []
+    },
+    {
+      "id": 3,
+      "name": "Milo",
+      "importPrice": 20000.0,
+      "sellPrice": 30000.0,
+      "wholesalePrice": 0.0,
+      "unitNote": "Bán lẻ",
+      "quantity": 10,
+      "location": "Tủ lạnh",
+      "minStock": 5,
+      "totalSold": 0,
+      "lastActiveDate": "2026-10-20",
+      "type": "EXPIRING",
+      "expiryDate": "2027-04-20",
+      "expiryBatches": [
+        {"expiryDate": "2027-04-20", "quantity": 10}
+      ]
+    }
+  ],
+  "debts": [
+    {"id": 2, "customerName": "Nguyễn văn A", "phoneOrAddress": "số 9", "itemsNote": "nhiều đò", "amount": 152000.0, "paid": false, "createdAt": "2026-10-20T17:51:04.291647500"}
+  ],
+  "deletedDebts": [
+    {"id": 1, "customerName": "Cô Lan (Nhà số 12 ngõ 3)", "phoneOrAddress": "0912.345.678", "itemsNote": "1 thùng Bia Hà Nội, 2 lốc sữa tươi", "amount": 383000.0, "paid": true, "createdAt": "2026-10-20T17:46:45.332525800"}
+  ],
+  "stockLogs": [
+    {"id": 3, "productId": 2, "productName": "Nước rửa chén Sunlight 750g", "type": "NHAP_HANG", "oldQuantity": 10, "newQuantity": 15, "changeOrSoldQty": 5, "unitPrice": 24000.0, "note": "Nhập hàng từ đại lý", "timestamp": "2026-10-20T17:52:25.398960200"},
+    {"id": 2, "productId": 2, "productName": "Nước rửa chén Sunlight 750g", "type": "KIEM_KE", "oldQuantity": 15, "newQuantity": 10, "changeOrSoldQty": 5, "unitPrice": 30000.0, "note": "Kiểm đếm kệ: Kệ rau củ", "timestamp": "2026-10-20T17:52:18.562764700"},
+    {"id": 1, "productId": 2, "productName": "Nước rửa chén Sunlight 750g", "type": "KIEM_KE", "oldQuantity": 15, "newQuantity": 15, "changeOrSoldQty": 0, "unitPrice": 30000.0, "note": "10", "timestamp": "2026-10-20T17:52:10.438751400"}
+  ],
+  "dailyClosings": []
+}

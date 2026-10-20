@@ -31,3 +31,4 @@ bin/
 ###IDEA###
 .idea/
 *.iml
+*.json
