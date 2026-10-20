@@ -331,6 +331,7 @@ public class DuTuWebView {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23E6C280'/%3E%3Cpath d='M15 35h70l-5-15H20z' fill='%237B2869'/%3E%3Cpath d='M15 35q7 7 14 0 7 7 14 0 7 7 14 0 7 7 14 0 7 7 14 0' fill='%23F9EBF2' stroke='%23C84B83' stroke-width='4'/%3E%3Crect x='22' y='42' width='56' height='42' rx='6' fill='%23FFFDF9' stroke='%234A154B' stroke-width='3'/%3E%3Cpath d='M28 58h44M28 72h44' stroke='%23E6C280' stroke-width='3'/%3E%3Ccircle cx='75' cy='75' r='14' fill='%23C84B83'/%3E%3C/svg%3E">
             <title>DuTu - Sổ Sách Điện Tử & Tra Giá Tạp Hóa</title>
             <style>
                 :root {
@@ -381,6 +382,9 @@ public class DuTuWebView {
                     display: flex; align-items: center; gap: 8px;
                 }
                 .tab-btn.active { background: linear-gradient(135deg, var(--plum-main), var(--pink-accent)); color: white; border-color: var(--sand-gold); }
+                .debt-view-tabs { display: flex; gap: 10px; margin: 0 0 16px; flex-wrap: wrap; }
+                .debt-view-panel { display: none; }
+                .debt-view-panel.active { display: block; }
 
                 .container { max-width: 1400px; margin: 22px auto; padding: 0 20px; }
                 .toast {
@@ -508,6 +512,23 @@ public class DuTuWebView {
         // JavaScript hỗ trợ
         sb.append("""
         <script>
+            function formatCurrencyInput(element) {
+                const digits = element.value.replace(/\\D/g, '');
+                element.value = digits ? Number(digits).toLocaleString('vi-VN') : '';
+            }
+
+            document.querySelectorAll('.currency-input').forEach(input => {
+                input.addEventListener('input', () => formatCurrencyInput(input));
+                formatCurrencyInput(input);
+            });
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', () => {
+                    form.querySelectorAll('.currency-input').forEach(input => {
+                        input.value = input.value.replace(/\\D/g, '');
+                    });
+                });
+            });
+
             function removeVietnameseTones(str) {
                 if (!str) return '';
                 str = str.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');
@@ -520,6 +541,13 @@ public class DuTuWebView {
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                 document.getElementById('tab-' + tabId).classList.add('active');
                 if (btnEl) btnEl.classList.add('active');
+            }
+
+            function switchDebtorView(viewId, btnEl) {
+                document.querySelectorAll('.debt-view-panel').forEach(panel => panel.classList.remove('active'));
+                document.querySelectorAll('.debt-view-tabs .tab-btn').forEach(button => button.classList.remove('active'));
+                document.getElementById(viewId).classList.add('active');
+                btnEl.classList.add('active');
             }
 
             function filterProducts() {
@@ -554,6 +582,9 @@ public class DuTuWebView {
                 document.getElementById('editImportPrice').value = btn.dataset.import;
                 document.getElementById('editSellPrice').value = btn.dataset.sell;
                 document.getElementById('editWholesalePrice').value = btn.dataset.wholesale;
+                formatCurrencyInput(document.getElementById('editImportPrice'));
+                formatCurrencyInput(document.getElementById('editSellPrice'));
+                formatCurrencyInput(document.getElementById('editWholesalePrice'));
                 document.getElementById('editUnitNote').value = btn.dataset.unit;
                 document.getElementById('editQuantity').value = btn.dataset.quantity;
                 document.getElementById('editLocation').value = btn.dataset.location;
@@ -577,6 +608,7 @@ public class DuTuWebView {
                 document.getElementById('editPhoneOrAddress').value = phone;
                 document.getElementById('editItemsNote').value = items;
                 document.getElementById('editDebtAmount').value = amount;
+                formatCurrencyInput(document.getElementById('editDebtAmount'));
                 document.getElementById('editDebtModal').style.display = 'block';
             }
             function closeEditDebtModal() { document.getElementById('editDebtModal').style.display = 'none'; }
@@ -693,10 +725,10 @@ public class DuTuWebView {
         sb.append("<div><label>Chế độ nhập giá vốn:</label><select name='priceMode'>")
                 .append("<option value='UNIT'>1. Nhập giá chia (Cho 1 đơn vị lẻ)</option>")
                 .append("<option value='BULK'>2. Nhập tổng tiền nguyên cục (Cả lô)</option></select></div>");
-        sb.append("<div><label>Giá vốn (Theo chế độ chọn):</label><input type='number' name='importPrice' placeholder='VD: 7000 hoặc tổng 70000' required></div>");
+        sb.append("<div><label>Giá vốn (Theo chế độ chọn):</label><input type='text' class='currency-input' inputmode='numeric' name='importPrice' placeholder='VD: 7.000 hoặc tổng 70.000' required></div>");
 
-        sb.append("<div><label>Giá bán lẻ (đ):</label><input type='number' name='sellPrice' placeholder='VD: 10000' required></div>");
-        sb.append("<div><label>Giá thùng / sỉ (đ) (Bỏ trống nếu không có):</label><input type='number' name='wholesalePrice' placeholder='Để 0 nếu bán lẻ' value='0'></div>");
+        sb.append("<div><label>Giá bán lẻ (đ):</label><input type='text' class='currency-input' inputmode='numeric' name='sellPrice' placeholder='VD: 10.000' required></div>");
+        sb.append("<div><label>Giá thùng / sỉ (đ) (Bỏ trống nếu không có):</label><input type='text' class='currency-input' inputmode='numeric' name='wholesalePrice' placeholder='Để 0 nếu bán lẻ' value='0'></div>");
         sb.append("<div><label>Quy cách:</label><input type='text' name='unitNote' placeholder='VD: Thùng 0 lon' value='Bán lẻ'></div>");
         sb.append("<div><label>Số lượng tồn ban đầu:</label><input type='number' name='quantity' value='10' required></div>");
         sb.append("<div><label>Báo sắp hết khi tồn &le;:</label><input type='number' name='minStock' value='5' required></div>");
@@ -757,9 +789,9 @@ public class DuTuWebView {
                     <input type="hidden" id="editId" name="id">
                     <div class="form-grid">
                         <div style="grid-column: 1 / -1;"><label>Tên mặt hàng:</label><input type="text" id="editName" name="name" required></div>
-                        <div><label>Giá vốn nhập (đ):</label><input type="number" id="editImportPrice" name="importPrice" required></div>
-                        <div><label>Giá bán lẻ (đ):</label><input type="number" id="editSellPrice" name="sellPrice" required></div>
-                        <div><label>Giá sỉ/thùng (đ):</label><input type="number" id="editWholesalePrice" name="wholesalePrice" required></div>
+                        <div><label>Giá vốn nhập (đ):</label><input type="text" class="currency-input" inputmode="numeric" id="editImportPrice" name="importPrice" required></div>
+                        <div><label>Giá bán lẻ (đ):</label><input type="text" class="currency-input" inputmode="numeric" id="editSellPrice" name="sellPrice" required></div>
+                        <div><label>Giá sỉ/thùng (đ):</label><input type="text" class="currency-input" inputmode="numeric" id="editWholesalePrice" name="wholesalePrice" required></div>
                         <div><label>Quy cách:</label><input type="text" id="editUnitNote" name="unitNote"></div>
                         <div><label>Tồn kho:</label><input type="number" id="editQuantity" name="quantity" required></div>
                         <div><label>Vị trí kệ:</label><input type="text" id="editLocation" name="location" required></div>
@@ -820,7 +852,7 @@ public class DuTuWebView {
                     .append("<input type='hidden' name='id' value='").append(p.getID()).append("'>")
                     .append("<input type='hidden' name='shelf' value='").append(escapeHtml(selectedShelf)).append("'>")
                     .append("<input type='number' name='addedQty' placeholder='+SL' min='1' style='width:80px;' required>")
-                    .append("<input type='number' name='importPrice' value='").append((long) p.getImportPrice()).append("' title='Giá vốn' style='width:95px;'>");
+                    .append("<input type='text' class='currency-input' inputmode='numeric' name='importPrice' value='").append((long) p.getImportPrice()).append("' title='Giá vốn' style='width:95px;'>");
 
             if (p instanceof ExpiringProduct) {
                 sb.append("<input type='date' name='expiryDate' value='").append(LocalDate.now().plusMonths(6)).append("' title='HSD lô mới' style='width:130px;'>");
@@ -891,17 +923,27 @@ public class DuTuWebView {
                 .append("<span>Tổng nợ chưa thu: <strong style='color:var(--danger);'>")
                 .append(formatMoney(ledgerService.getTotalUnpaidDebt())).append(" đ</strong></span></h2>");
 
+        sb.append("<datalist id='debtorSuggestions'>");
+        for (String name : ledgerService.getDebtorSuggestions()) {
+            sb.append("<option value='").append(escapeHtml(name)).append("'></option>");
+        }
+        sb.append("</datalist>");
         sb.append("<form method='POST' action='/debt/add'>");
         sb.append("<div class='form-grid'>");
-        sb.append("<div><label>Tên khách hàng:</label><input type='text' name='customerName' placeholder='VD: Khách A' required></div>");
+        sb.append("<div><label>Tên khách hàng:</label><input type='text' name='customerName' list='debtorSuggestions' placeholder='VD: Khách A' autocomplete='on' required></div>");
         sb.append("<div><label>SĐT hoặc Địa chỉ:</label><input type='text' name='phoneOrAddress' placeholder='VD: Nhà số 0'></div>");
-        sb.append("<div><label>Số tiền nợ (đ):</label><input type='number' name='amount' placeholder='VD: 125000' required></div>");
+        sb.append("<div><label>Số tiền nợ (đ):</label><input type='text' class='currency-input' inputmode='numeric' name='amount' placeholder='VD: 125.000' required></div>");
         sb.append("<div style='grid-column: 1 / -1;'><label>Chi tiết mặt hàng (Ghi chú):</label><input type='text' name='itemsNote' placeholder='VD: 1 thùng bia, 2 chai dầu ăn' required></div>");
         sb.append("</div>");
         sb.append("<div style='margin-top:14px;'><button type='submit' class='btn btn-primary' onclick=\"return confirm('Xác nhận ghi sổ nợ mới?');\">✍️ Ghi Vào Sổ Nợ</button></div>");
         sb.append("</form></div>");
 
-        // Danh sách nợ
+        sb.append("<div class='debt-view-tabs'>")
+                .append("<button type='button' class='tab-btn active' onclick=\"switchDebtorView('debtTransactionsView', this)\">Danh Sách Lượt Nợ</button>")
+                .append("<button type='button' class='tab-btn' onclick=\"switchDebtorView('debtorsGroupedView', this)\">Danh Sách Người Nợ</button>")
+                .append("</div>");
+
+        sb.append("<div id='debtTransactionsView' class='debt-view-panel active'>");
         sb.append("<div class='card'>");
         sb.append("<h3 class='card-header'>Danh Sách Khoản Nợ Chưa Trả</h3>");
         sb.append("<table><thead><tr><th>Ngày giờ</th><th>Khách hàng</th><th>Mặt hàng lấy chịu</th><th>Số tiền nợ</th><th>Thao tác</th></tr></thead><tbody>");
@@ -919,6 +961,34 @@ public class DuTuWebView {
             sb.append("</td></tr>");
         }
         sb.append("</tbody></table></div>");
+        sb.append("</div>");
+
+        sb.append("<div id='debtorsGroupedView' class='debt-view-panel'>");
+        sb.append("<div class='card'>");
+        sb.append("<h3 class='card-header'>Danh Sách Người Nợ</h3>");
+        sb.append("<table><thead><tr><th>Khách hàng</th><th>SĐT / Địa chỉ</th><th>Tổng đang nợ</th><th>Chi tiết</th></tr></thead><tbody>");
+        for (LedgerService.DebtorSummary debtor : ledgerService.getUnpaidDebtorSummaries()) {
+            String detailsId = "debtor-details-" + debtor.debts().get(0).getId();
+            sb.append("<tr>")
+                    .append("<td><a href='#").append(detailsId).append("' onclick=\"document.getElementById('")
+                    .append(detailsId).append("').open = true;\"><strong>")
+                    .append(escapeHtml(debtor.customerName())).append("</strong></a></td>")
+                    .append("<td>").append(escapeHtml(debtor.phoneOrAddress())).append("</td>")
+                    .append("<td style='font-size:19px;font-weight:800;color:var(--danger);'>")
+                    .append(formatMoney(debtor.totalDebt())).append(" đ</td>")
+                    .append("<td>").append(debtor.debts().size()).append(" lượt</td></tr>");
+            sb.append("<tr><td colspan='4' style='padding:0;'>")
+                    .append("<details id='").append(detailsId).append("'><summary style='padding:10px 14px;cursor:pointer;color:var(--plum-main);'>Xem chi tiết các khoản nợ</summary>")
+                    .append("<table style='margin:0;'><thead><tr><th>Ngày giờ</th><th>Chi tiết mặt hàng</th><th>Số tiền</th></tr></thead><tbody>");
+            for (DebtRecord debt : debtor.debts()) {
+                sb.append("<tr><td>").append(escapeHtml(debt.getFormattedDate())).append("</td>")
+                        .append("<td>").append(escapeHtml(debt.getItemsNote())).append("</td>")
+                        .append("<td>").append(formatMoney(debt.getAmount())).append(" đ</td></tr>");
+            }
+            sb.append("</tbody></table></details></td></tr>");
+        }
+        sb.append("</tbody></table></div>");
+        sb.append("</div>");
 
         // Thùng rác nợ gần đây (Khôi phục nếu nhầm)
         sb.append("<div class='card'>");
@@ -953,7 +1023,7 @@ public class DuTuWebView {
                     <div class="form-grid">
                         <div><label>Tên khách:</label><input type="text" id="editCustomerName" name="customerName" required></div>
                         <div><label>SĐT / Địa chỉ:</label><input type="text" id="editPhoneOrAddress" name="phoneOrAddress"></div>
-                        <div><label>Số tiền nợ (đ):</label><input type="number" id="editDebtAmount" name="amount" required></div>
+                        <div><label>Số tiền nợ (đ):</label><input type="text" class="currency-input" inputmode="numeric" id="editDebtAmount" name="amount" required></div>
                         <div style="grid-column: 1 / -1;"><label>Chi tiết mặt hàng:</label><input type="text" id="editItemsNote" name="itemsNote" required></div>
                     </div>
                     <div style="margin-top:18px; display:flex; gap:10px;">
@@ -973,9 +1043,9 @@ public class DuTuWebView {
         sb.append("<form method='POST' action='/closing/add'>");
         sb.append("<div class='form-grid'>");
         sb.append("<div><label>Ngày chốt:</label><input type='date' name='date' value='").append(LocalDate.now()).append("' required></div>");
-        sb.append("<div><label>Tiền mặt ngăn kéo (đ):</label><input type='number' name='cashAmount' required></div>");
-        sb.append("<div><label>Chuyển khoản (đ):</label><input type='number' name='transferAmount' value='0'></div>");
-        sb.append("<div><label>Chi trả nhập hàng (đ):</label><input type='number' name='importExpense' value='0'></div>");
+        sb.append("<div><label>Tiền mặt ngăn kéo (đ):</label><input type='text' class='currency-input' inputmode='numeric' name='cashAmount' required></div>");
+        sb.append("<div><label>Chuyển khoản (đ):</label><input type='text' class='currency-input' inputmode='numeric' name='transferAmount' value='0'></div>");
+        sb.append("<div><label>Chi trả nhập hàng (đ):</label><input type='text' class='currency-input' inputmode='numeric' name='importExpense' value='0'></div>");
         sb.append("<div style='grid-column: 1 / -1;'><label>Ghi chú:</label><input type='text' name='note' placeholder='VD: Trả tiền đại lý ABC'></div>");
         sb.append("</div>");
         sb.append("<div style='margin-top:14px;'><button type='submit' class='btn btn-primary' onclick=\"return confirm('Xác nhận lưu sổ chốt tiền ngày?');\">💾 Lưu Sổ Cuối Ngày</button></div>");

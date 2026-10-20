@@ -2,6 +2,7 @@ package model;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 public class DebtRecord {
     private int id;
@@ -25,6 +26,9 @@ public class DebtRecord {
     // Getters
     public int getId() { return id; }
     public String getCustomerName() { return customerName; }
+    public String getCustomerKey() {
+        return customerName == null ? "" : customerName.trim().toLowerCase(Locale.ROOT);
+    }
     public String getPhoneOrAddress() { return phoneOrAddress; }
     public String getItemsNote() { return itemsNote; }
     public double getAmount() { return amount; }
