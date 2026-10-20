@@ -1,14 +1,27 @@
+<div align="center">
+
 # 🏪 DuTu - Hệ Thống Sổ Sách Điện Tử & Tra Giá Tạp Hóa
 
-![Java Version](https://img.shields.io/badge/Java-17%2B-orange?style=for-the-badge&logo=openjdk)
-![![Architecture](https://img.shields.io/badge/Architecture-3--Tier%20(MVC)-7B2869?style=for-the-badge)](#)
-![![UI Theme](https://img.shields.io/badge/UI%20Theme-Plum%20Pink%20%26%20Sand%20Gold-C84B83?style=for-the-badge)](#)
-![![Status](https://img.shields.io/badge/Status-Demo%20Ready-1F8A5B?style=for-the-badge)](#)
-![License](https://img.shields.io/github/license/MinhquanLuong2137/TENREPO?style=for-the-badge&color=blue)
-![Latest Release](https://img.shields.io/github/v/release/MinhquanLuong2137/TENREPO?style=for-the-badge&color=green)
-**DuTu** là giải pháp phần mềm sổ sách điện tử và tra cứu giá thông minh dành riêng cho cửa hàng tạp hóa / bách hóa gia đình. Hệ thống được tối ưu hóa cho đối tượng người dùng lớn tuổi (phụ huynh), thay thế phương pháp tính tiền rườm rà từng đơn hàng bằng cơ chế **Kiểm đếm kệ định kỳ (FIFO)** và **Bộ 4 Cuốn Sổ Điện Tử** trực quan.
+*Giải pháp phần mềm sổ sách điện tử và tra cứu giá thông minh dành riêng cho cửa hàng tạp hóa / bách hóa gia đình.*
+
+<br />
+
+<!-- Badges đã được sửa cú pháp chuẩn & căn giữa -->
+[![Java Version](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](#)
+[![Architecture](https://img.shields.io/badge/Architecture-3--Tier%20(MVC)-7B2869?style=for-the-badge)](#)
+[![UI Theme](https://img.shields.io/badge/UI%20Theme-Plum%20Pink%20%26%20Sand%20Gold-C84B83?style=for-the-badge)](#)
+[![Status](https://img.shields.io/badge/Status-Demo%20Ready-1F8A5B?style=for-the-badge)](#)
+[![License](https://img.shields.io/badge/License-MIT-4169E1?style=for-the-badge)](#)
+
+</div>
 
 ---
+
+### 📖 Giới thiệu tổng quan
+
+**DuTu** là giải pháp phần mềm sổ sách điện tử và tra cứu giá thông minh dành riêng cho cửa hàng tạp hóa / bách hóa gia đình.
+
+Hệ thống được tối ưu hóa cho đối tượng người dùng lớn tuổi (phụ huynh), thay thế phương pháp tính tiền rườm rà từng đơn hàng bằng cơ chế **Kiểm đếm kệ định kỳ (FIFO)** và **Bộ 4 Cuốn Sổ Điện Tử** trực quan.
 
 ## 🌸 Điểm Nổi Bật & Triết Lý Thiết Kế
 
