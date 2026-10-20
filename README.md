@@ -147,3 +147,42 @@ src/
 - [x] Tích hợp cảnh báo an toàn (`confirm`) & hỗ trợ 2 chế độ nhập giá vốn.
 - [x] Tích hợp Module lưu trữ dữ liệu tự động ra tệp tin JSON/Text đĩa cục bộ.
 - [x] Đóng gói phần mềm thành file thực thi `.exe` / `.jar` chạy 1-click cho người dùng cuối.
+
+
+---
+
+## 📜 Giấy phép (License)
+
+Dự án được phân phối chính thức theo **Giấy phép MIT (MIT License)**. Bạn được tự do sử dụng, sao chép, chỉnh sửa và phân phối lại cho mục đích cá nhân hoặc thương mại.
+
+Xem chi tiết điều khoản tại tệp [LICENSE](LICENSE).
+
+---
+
+## 🤝 Đóng góp & Phát triển (Contributing)
+
+Mọi ý kiến đóng góp, báo lỗi (Issues) hoặc đề xuất tính năng mới cho **DuTu** luôn được hoan nghênh:
+
+1. **Fork** repository này về tài khoản của bạn.
+2. Tạo nhánh tính năng mới (`git checkout -b feature/TinhNangMoi`).
+3. **Commit** các thay đổi (`git commit -m 'Thêm tính năng X'`).
+4. **Push** lên nhánh của bạn (`git push origin feature/TinhNangMoi`).
+5. Mở một **Pull Request** để thảo luận và hợp nhất code.
+
+---
+
+## 💖 Lời cảm ơn (Acknowledgements)
+
+* [Shields.io](https://shields.io/) — Dịch vụ tạo huy hiệu giao diện chuyên nghiệp.
+* [OpenJDK / Java](https://www.oracle.com/java/) — Nền tảng phát triển ứng dụng mạnh mẽ.
+* Cảm ơn **Tiệm tạp hóa DuTu** đã cung cấp ý tưởng và bài toán thực tế để hoàn thiện phần mềm này.
+
+---
+
+<div align="center">
+
+**DuTu Goods Manager** • Developed with ❤️ for Family Business
+
+⭐ *Nếu bạn thấy dự án này hữu ích, hãy dành tặng 1 Star trên GitHub nhé!* ⭐
+
+</div>
