@@ -137,6 +137,11 @@ src/
    chmod +x DuTu-Goods-Manager.jar
    ```
 
+### 3. Đóng gói ứng dụng `.exe` trên Windows
+Chạy `build_exe.bat` ở thư mục gốc dự án để đóng gói JAR thành ứng dụng Windows độc lập. Script dùng `jpackage` từ JDK (cần cài JDK và đặt `JAVA_HOME`, hoặc thêm `jpackage.exe` vào `PATH`), lấy JAR từ `out/artifacts/DuTu_Goods_Manager_jar/DuTu Goods Manager.jar` và dùng `DuTu.ico` làm biểu tượng ứng dụng.
+
+Sau khi chạy thành công, ứng dụng được tạo trong `out/artifacts/exe_output/DuTu Goods Manager/`. Chạy `DuTu Goods Manager.exe` trong thư mục này; cần giữ nguyên toàn bộ thư mục vì nó bao gồm Java runtime cùng các tệp cần thiết. Có thể chạy lại script để cập nhật bản đóng gói hiện có.
+
 ## 📋 Trạng Thái Phát Triển (Roadmap)
 
 - [x] Thiết kế kiến trúc 3 tầng (Model - Service - View) & Hoàn thiện mô hình OOP.
