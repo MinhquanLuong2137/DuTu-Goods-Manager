@@ -34,3 +34,6 @@ bin/
 *.json
 
 META-INF/
+
+*.iml
+*.exe
