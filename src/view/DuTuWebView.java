@@ -7,11 +7,9 @@ import service.LedgerService;
 import service.PersistenceService;
 import service.ProductService;
 
-import java.awt.Desktop;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -57,10 +55,6 @@ public class DuTuWebView {
             System.out.println("==================================================");
             System.out.println("  DuTu Web UI dang chay tai: " + url);
             System.out.println("==================================================");
-
-            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                Desktop.getDesktop().browse(new URI(url));
-            }
         } catch (Exception e) {
             System.out.println("[!] Khong the khoi dong Web Server: " + e.getMessage());
         }

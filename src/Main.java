@@ -4,8 +4,8 @@ import model.Product;
 import service.LedgerService;
 import service.PersistenceService;
 import service.ProductService;
+import view.AppWindow;
 import view.DuTuWebView;
-import view.ProductView;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -39,8 +39,6 @@ public class Main {
         DuTuWebView webView = new DuTuWebView(productService, ledgerService, 8080);
         webView.start();
 
-        // 4. Console View chạy song song
-        ProductView consoleView = new ProductView(productService, ledgerService);
-        consoleView.displayMenu();
+        AppWindow.launch(AppWindow.class, args);
     }
 }

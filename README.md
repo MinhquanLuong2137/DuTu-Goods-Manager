@@ -92,7 +92,7 @@ src/
 
 - **Ngôn ngữ:** Java Core (JDK 17+)
 - **Server Web:** Embedded `com.sun.net.httpserver.HttpServer` (Không dùng framework nặng, khởi động cực nhanh)
-- **Giao diện:** HTML5, CSS3 Custom Properties, JavaScript ES6 (Inline SVG Icons)
+- **Giao diện:** JavaFX WebView hiển thị giao diện HTML5, CSS3 Custom Properties và JavaScript ES6 trong cửa sổ Desktop
 - **Công cụ phát triển:** IntelliJ IDEA
 - **Quản lý phiên bản:** Git & GitHub
 - **Lưu trữ dữ liệu:** JSON
@@ -103,8 +103,8 @@ src/
 ## 🚀 Hướng Dẫn Khởi Chạy
 
 ### 1. Yêu cầu hệ thống
-- Máy tính đã cài đặt **JDK 17** hoặc cao hơn.
-- Trình duyệt web bất kỳ (Chrome, Edge, Firefox).
+- Máy tính đã cài đặt **JDK 17** hoặc cao hơn và **Maven**.
+- JavaFX được quản lý tự động qua Maven; không cần cài trình duyệt riêng.
 
 ### 2. Các bước khởi chạy
 #### Cách 1: Chạy trực tiếp từ IntelliJ IDEA
@@ -114,21 +114,18 @@ src/
    cd dutu-goods-manager
    ```
 
-2. Mở dự án bằng IntelliJ IDEA.
+2. Mở thư mục dự án bằng IntelliJ IDEA. Nếu project đang được mở như Java module thông thường, nhấp phải `pom.xml` → **Add as Maven Project**, sau đó chọn **Reload All Maven Projects** trong cửa sổ Maven để tải JavaFX dependencies.
 
-3. Chạy file src/Main.java.
+3. Chạy `Main` sau khi Maven sync hoàn tất, hoặc chạy `mvn javafx:run` trong Terminal của IntelliJ. Không chạy `Main.java` trước khi Maven tải xong các dependency.
 
-- Ứng dụng sẽ nạp dữ liệu hiện có từ `dutu_database.json` trong thư mục chạy. Chỉ lần chạy đầu tiên mới tạo dữ liệu mẫu; các thay đổi được tự động lưu vào tệp này. Giao diện Web mở tại địa chỉ:
+- Ứng dụng sẽ nạp dữ liệu hiện có từ `dutu_database.json` trong thư mục chạy. Chỉ lần chạy đầu tiên mới tạo dữ liệu mẫu; các thay đổi được tự động lưu vào tệp này. Giao diện mở trong cửa sổ Desktop độc lập:
 
-    ```bash
-    http://localhost:8080
-    ```
-  (Đồng thời, bạn vẫn có thể thao tác song song từ Terminal nhờ giao diện Console View).
+  `DuTu Goods Manager - Sổ Sách Điện Tử`
 
 #### Cách 2: Chạy file thực thi `.jar` / `.exe`
 1. Tải file thực thi từ [Releases](https://github.com/MinhquanLuong2137/DuTu-Goods-Manager/releases)
-2. Giải nén và chạy file `DuTu-Goods-Manager.jar` hoặc `DuTu-Goods-Manager.exe`.
-3. Mở trình duyệt và truy cập `http://localhost:8080` để sử dụng.
+2. Giải nén và chạy ứng dụng Windows đã đóng gói trong `DuTu Goods Manager.exe`. Khi chạy từ mã nguồn, dùng `mvn javafx:run` từ thư mục dự án.
+3. Ứng dụng sẽ mở giao diện trong cửa sổ Desktop; không cần mở Chrome/Edge.
 4. Dữ liệu sẽ được lưu tự động vào tệp `dutu_database.json` trong cùng thư mục chạy.
 5. **Lưu ý:** Không xóa hoặc di chuyển tệp `dutu_database.json` nếu muốn giữ lại dữ liệu đã nhập.
 6. **Lưu ý:** Nếu chạy trên Windows, hãy đảm bảo tường lửa cho phép ứng dụng truy cập cổng 8080.
@@ -138,7 +135,7 @@ src/
    ```
 
 ### 3. Đóng gói ứng dụng `.exe` trên Windows
-Chạy `build_exe.bat` ở thư mục gốc dự án để đóng gói JAR thành ứng dụng Windows độc lập. Script dùng `jpackage` từ JDK (cần cài JDK và đặt `JAVA_HOME`, hoặc thêm `jpackage.exe` vào `PATH`), lấy JAR từ `out/artifacts/DuTu_Goods_Manager_jar/DuTu Goods Manager.jar` và dùng `DuTu.ico` làm biểu tượng ứng dụng.
+Chạy `build_exe.bat` ở thư mục gốc dự án để đóng gói ứng dụng Windows độc lập. Script dùng Maven để biên dịch và lấy các dependency JavaFX, sau đó dùng `jpackage` từ JDK (cần cài JDK và đặt `JAVA_HOME`, hoặc thêm `jpackage.exe` vào `PATH`) cùng `DuTu.ico` làm biểu tượng ứng dụng.
 
 Sau khi chạy thành công, ứng dụng được tạo trong `out/artifacts/exe_output/DuTu Goods Manager/`. Chạy `DuTu Goods Manager.exe` trong thư mục này; cần giữ nguyên toàn bộ thư mục vì nó bao gồm Java runtime cùng các tệp cần thiết. Có thể chạy lại script để cập nhật bản đóng gói hiện có.
 
