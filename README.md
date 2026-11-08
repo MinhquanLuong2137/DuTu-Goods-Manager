@@ -89,7 +89,8 @@ src/
 │   └── LedgerService.java  # Logic quản lý bộ sổ điện tử (Nợ, Thùng rác 20 mục, Chốt sổ)
 └── view/                   # Tầng Giao diện Người dùng (Presentation Layer)
     ├── DuTuWebView.java    # Embedded Web UI (Tím Hồng & Vàng Cát, HTTP Server)
-    └── ProductView.java    # Console View (Menu tương tác dòng lệnh)
+    ├── ProductView.java    # Console View (Menu tương tác dòng lệnh)
+    └── AppWindow.java      # Đóng gói thành desktop app
 
 ```
 
@@ -128,22 +129,89 @@ src/
 
   `DuTu Goods Manager - Sổ Sách Điện Tử`
 
-#### Cách 2: Chạy file thực thi `.jar` / `.exe`
-1. Tải file thực thi từ [Releases](https://github.com/MinhquanLuong2137/DuTu-Goods-Manager/releases)
-2. Giải nén và chạy ứng dụng Windows đã đóng gói trong `DuTu Goods Manager.exe`. Khi chạy từ mã nguồn, dùng `mvn javafx:run` từ thư mục dự án.
-3. Ứng dụng sẽ mở giao diện trong cửa sổ Desktop; không cần mở Chrome/Edge.
-4. Dữ liệu sẽ được lưu tự động vào tệp `dutu_database.json` trong cùng thư mục chạy.
-5. **Lưu ý:** Không xóa hoặc di chuyển tệp `dutu_database.json` nếu muốn giữ lại dữ liệu đã nhập.
-6. **Lưu ý:** Nếu chạy trên Windows, hãy đảm bảo tường lửa cho phép ứng dụng truy cập cổng 8080.
-7. **Lưu ý:** Nếu chạy trên Linux/Mac, hãy đảm bảo quyền thực thi cho file `.jar` bằng lệnh:
+### Cách 2: Khởi chạy ứng dụng đã đóng gói (Windows / Linux)
+
+#### 🪟 Trên Windows (Bản Portable)
+1. Tải tệp `DuTu-Goods-Manager-Portable-Window-x64-v1.0.9.zip` từ mục **Releases**.
+2. **Bắt buộc giải nén** (`Extract All...`) tệp ZIP ra một thư mục cố định trên máy.
+3. Click đúp vào file `DuTu Goods Manager.exe` để bắt đầu sử dụng (không cần cài Java).
+   > ⚠️ **Lưu ý:** Không kéo riêng file `.exe` ra ngoài thư mục (bắt buộc nằm chung với 2 thư mục `app` và `runtime`). Để đưa biểu tượng ra màn hình chính, click chuột phải vào file `.exe` ➔ **Send to ➔ Desktop (create shortcut)**.
+
+---
+
+#### 🐧 Trên Linux (Ubuntu / Debian / Mint)
+* **Cách 1: File cài đặt `.deb` (Khuyên dùng)**
+    1. Tải tệp `dutu-goods-manager_1.0.9_amd64.deb`.
+    2. Click đúp vào file `.deb` ➔ Chọn **Install** trong App Center (hoặc chạy lệnh: `sudo dpkg -i dutu-goods-manager_1.0.9_amd64.deb && sudo apt install -f`).
+    3. Mở phím **Super (Windows)**, gõ `DuTu` và bấm vào ứng dụng để khởi chạy.
+
+* **Cách 2: Bản Portable (`.tar.gz`)**
+    1. Tải và giải nén tệp `DuTu-Goods-Manager-Linux-x64-v1.0.9.tar.gz`.
+    2. Mở Terminal tại thư mục đã giải nén và chạy lệnh:
+       ```bash
+       chmod +x "./bin/DuTu Goods Manager"
+       ./bin/"DuTu Goods Manager"
+       ```
+
+---
+
+#### 💻 Khởi chạy từ Mã nguồn (Developer)
+Tại thư mục gốc của dự án, mở Terminal/Command Prompt và chạy lệnh Maven:
+```bash
+mvn javafx:run
+```
+#### 📌 Lưu ý chung về Dữ liệu & Hệ thống:
+#### 💾 Lưu trữ dữ liệu: 
+Dữ liệu quản lý sẽ tự động lưu vào tệp dutu_database.json nằm tại thư mục chạy ứng dụng. Tuyệt đối không xóa tệp này để tránh mất dữ liệu.
+
+#### 🛡️ Cổng kết nối: 
+Ứng dụng chạy máy chủ web nội bộ trên cổng 8080. Đảm bảo tường lửa hoặc phần mềm diệt virus không chặn truy cập vào cổng này.
+
+
+### 3. Đóng gói ứng dụng (Windows & Linux)
+
+#### 🪟 Đóng gói trên Windows (`.exe` Portable)
+Chạy script `build_portable_app.bat` ở thư mục gốc dự án để tạo bản portable dạng `app-image` bằng `jpackage`:
+* Script tự động lấy tệp JAR và các dependency trong `out/artifacts/DuTu_Goods_Manager_jar/`, gán biểu tượng `DuTu.ico` và xuất kết quả tại `out/artifacts/exe_output_app/`.
+* Nếu có Maven trong `PATH`, script sẽ tự biên dịch và sao chép dependency trước khi đóng gói.
+* Sau khi hoàn tất, nén thư mục `DuTu Goods Manager` thành tệp `DuTu-Goods-Manager-Portable-Window-x64-v1.0.9.zip` để phát hành.
+
+#### 🐧 Đóng gói trên Linux (WSL2 / Ubuntu)
+Yêu cầu hệ thống đã cài đặt **JDK 21**, **OpenJFX** và **fakeroot** (`sudo apt install openjdk-21-jdk openjfx fakeroot -y`).
+
+1. **Tạo gói cài đặt `.deb` (Khuyên dùng cho Ubuntu / Debian / Mint):**
    ```bash
-   chmod +x DuTu-Goods-Manager.jar
+   jpackage --type deb \
+     --name "dutu-goods-manager" \
+     --app-version "1.0.9" \
+     --input "out/artifacts/DuTu_Goods_Manager_jar" \
+     --main-jar "DuTu Goods Manager.jar" \
+     --main-class Main \
+     --icon "DuTu.png" \
+     --module-path /usr/share/openjfx/lib \
+     --add-modules javafx.controls,javafx.web,javafx.graphics,javafx.media,javafx.base,jdk.httpserver \
+     --dest "out/artifacts/linux_output_app"
+   ```
+   *Kết quả:* Tệp `dutu-goods-manager_1.0.9_amd64.deb` hỗ trợ người dùng click đúp cài đặt trực tiếp vào Menu ứng dụng (Dash).
+
+2. **Tạo gói nén Portable `.tar.gz`:**
+   ```bash
+   # Đóng gói app-image Linux
+   jpackage --type app-image \
+     --name "DuTu Goods Manager" \
+     --input "out/artifacts/DuTu_Goods_Manager_jar" \
+     --main-jar "DuTu Goods Manager.jar" \
+     --main-class Main \
+     --icon "DuTu.png" \
+     --module-path /usr/share/openjfx/lib \
+     --add-modules javafx.controls,javafx.web,javafx.graphics,javafx.media,javafx.base,jdk.httpserver \
+     --dest "out/artifacts/linux_output_app"
+
+   # Nén thành file tar.gz
+   tar -czvf DuTu-Goods-Manager-Linux-x64-v1.0.9.tar.gz -C out/artifacts/linux_output_app "DuTu Goods Manager"
    ```
 
-### 3. Đóng gói ứng dụng `.exe` trên Windows
-Chạy `build_portable_app.bat` ở thư mục gốc dự án để tạo bản portable dạng `app-image` bằng `jpackage`. Script dùng JAR và các dependency JavaFX trong `out/artifacts/DuTu_Goods_Manager_jar/`, đặt biểu tượng `DuTu.ico` cho ứng dụng Windows và tạo/cập nhật đầu ra tại `out/artifacts/exe_output_app/`. Cần có JDK gồm `jpackage`; nếu Maven có trong `PATH`, script sẽ dùng Maven để biên dịch và sao chép dependency. Nếu không, script biên dịch bằng JDK và dùng các JAR JavaFX đã có trong thư mục đầu vào.
-
-Sau khi chạy thành công, mở `out/artifacts/exe_output_app/DuTu Goods Manager/DuTu Goods Manager.exe`. Giữ nguyên toàn bộ thư mục app-image vì thư mục chứa Java runtime và các thư viện cần thiết. Có thể chạy lại script để cập nhật bản đóng gói.
+---
 
 ## 📋 Trạng Thái Phát Triển (Roadmap)
 
@@ -155,10 +223,9 @@ Sau khi chạy thành công, mở `out/artifacts/exe_output_app/DuTu Goods Manag
 - [x] Tích hợp cảnh báo an toàn (`confirm`) & hỗ trợ 2 chế độ nhập giá vốn.
 - [x] Cảnh báo nợ quá hạn với ngày ghi nợ có thể chỉnh sửa và ngưỡng cảnh báo lưu trong JSON.
 - [x] Hỗ trợ bật/tắt khởi động cùng máy tính trên Windows và Linux.
-- [x] Gán biểu tượng `DuTu.ico` cho cửa sổ JavaFX và bản đóng gói Windows.
+- [x] Gán biểu tượng `DuTu.ico` (Windows) & `DuTu.png` (Linux) cho cửa sổ JavaFX và bản đóng gói.
 - [x] Tích hợp Module lưu trữ dữ liệu tự động ra tệp tin JSON/Text đĩa cục bộ.
-- [x] Đóng gói phần mềm thành file thực thi `.exe` / `.jar` chạy 1-click cho người dùng cuối.
-
+- [x] Đóng gói ứng dụng đa nền tảng (Windows Portable `.exe`, Linux `.deb` installer & Linux `.tar.gz` Portable) kèm JRE tích hợp.
 
 ---
 
