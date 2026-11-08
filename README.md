@@ -2,6 +2,8 @@
 
 # 🏪 DuTu - Hệ Thống Sổ Sách Điện Tử & Tra Giá Tạp Hóa
 
+<img src="DuTu.ico" alt="Biểu tượng DuTu Goods Manager" width="96" />
+
 *Giải pháp phần mềm sổ sách điện tử và tra cứu giá thông minh dành riêng cho cửa hàng tạp hóa / bách hóa gia đình.*
 
 <br />
@@ -30,9 +32,11 @@ Hệ thống được tối ưu hóa cho đối tượng người dùng lớn tu
 - **Cơ chế kiểm kê FIFO:** Tự động trừ tồn kho theo lô hạn sử dụng cũ nhất khi đếm kệ cuối ngày/cuối tuần, tự động suy ra lượng hàng đã bán mà không cần tạo hóa đơn bán lẻ rườm rà.
 - **Hai chế độ nhập giá vốn:** Hỗ trợ nhập giá vốn chia theo đơn vị lẻ hoặc nhập tổng tiền "nguyên cục/nguyên thùng" (máy tự động chia đều).
 - **An toàn dữ liệu:** Tích hợp hộp thoại xác nhận trước các thao tác nguy hiểm (xóa hàng, xóa kệ, trả nợ) cùng thùng rác lưu trữ 20 khoản nợ đã xóa gần đây.
-- **Tích hợp sổ nợ khách hàng:** Ghi nhận chi tiết khoản nợ, tự động tính tổng nợ hiện tại, tổng nợ đã xóa và tổng nợ đã thanh toán.
+- **Tích hợp sổ nợ khách hàng:** Ghi nhận ngày ghi nợ, tự động cảnh báo khoản chưa thu quá hạn theo ngưỡng có thể tùy chỉnh (mặc định 14 ngày), đồng thời cho phép sửa ngày và khôi phục 20 khoản nợ gần đây.
 - **Tích hợp sổ cộng tiền cuối ngày:** Ghi nhận tiền mặt, tiền chuyển khoản và tiền chi trả nhập hàng trong ngày, tự động tính **Thực thu ròng** và tổng kết doanh thu trực quan tích lũy qua tất cả các ngày chốt sổ.
 - **Dữ liệu lưu trữ cục bộ:** Tất cả dữ liệu được lưu vào tệp JSON trong thư mục chạy, không cần cài đặt cơ sở dữ liệu rườm rà, dễ dàng sao lưu và di chuyển.
+- **Khởi động cùng máy tính:** Có thể bật hoặc tắt trong phần cuối Web UI; hỗ trợ Windows và Linux.
+- **Ứng dụng Desktop:** JavaFX WebView hiển thị giao diện trong cửa sổ riêng, hỗ trợ hộp thoại JavaScript và biểu tượng ứng dụng `DuTu.ico`.
 ---
 
 ## 📌 Bộ Tính Năng Chính
@@ -53,10 +57,11 @@ Hệ thống được tối ưu hóa cho đối tượng người dùng lớn tu
 - **Top Bán Chạy:** Xếp hạng các mặt hàng đắt khách nhất cửa hàng.
 
 ### 4. 📓 Sổ Nợ Khách Hàng (Kèm Thùng Rác Khôi Phục)
-- Ghi nhận chi tiết: Tên khách, SĐT/địa chỉ, ngày giờ cụ thể, số tiền nợ riêng biệt và ghi chú mặt hàng tự do.
+- Ghi nhận chi tiết: Tên khách, SĐT/địa chỉ, ngày ghi nợ, số tiền riêng biệt và ghi chú mặt hàng tự do.
 - Hỗ trợ chỉnh sửa/cộng dồn khoản nợ trực tiếp nếu ghi nhầm.
+- Tự động đánh dấu khoản chưa thu quá hạn khi số ngày từ ngày ghi nợ vượt ngưỡng; ngưỡng mặc định 14 ngày có thể đổi ngay trong tab Sổ Nợ.
 - **Thùng rác Nợ:** Lưu trữ 20 khoản nợ đã thanh toán/xóa gần đây, cho phép khôi phục về sổ chính chỉ với 1 cú nhấp chuột.
-- **Tự động tính toán:** Hiển thị tổng nợ hiện tại, tổng nợ đã xóa và tổng nợ đã thanh toán.
+- **Tự động tính toán:** Hiển thị tổng nợ hiện tại và danh sách khoản quá hạn trong tab Cảnh Báo.
 
 ### 5. 💰 Sổ Cộng Tiền Cuối Ngày & Báo Cáo Doanh Thu
 - Ghi nhận tiền mặt ngăn kéo, tiền chuyển khoản và tiền chi trả nhập hàng trong ngày.
@@ -104,6 +109,7 @@ src/
 
 ### 1. Yêu cầu hệ thống
 - Máy tính đã cài đặt **JDK 17** hoặc cao hơn và **Maven**.
+- Đóng gói app-image Windows cần JDK có `jpackage`; bật autostart trên Linux tạo tệp `.desktop` trong `~/.config/autostart`.
 - JavaFX được quản lý tự động qua Maven; không cần cài trình duyệt riêng.
 
 ### 2. Các bước khởi chạy
@@ -135,9 +141,9 @@ src/
    ```
 
 ### 3. Đóng gói ứng dụng `.exe` trên Windows
-Chạy `build_exe.bat` ở thư mục gốc dự án để đóng gói ứng dụng Windows độc lập. Script dùng Maven để biên dịch và lấy các dependency JavaFX, sau đó dùng `jpackage` từ JDK (cần cài JDK và đặt `JAVA_HOME`, hoặc thêm `jpackage.exe` vào `PATH`) cùng `DuTu.ico` làm biểu tượng ứng dụng.
+Chạy `build_portable_app.bat` ở thư mục gốc dự án để tạo bản portable dạng `app-image` bằng `jpackage`. Script dùng JAR và các dependency JavaFX trong `out/artifacts/DuTu_Goods_Manager_jar/`, đặt biểu tượng `DuTu.ico` cho ứng dụng Windows và tạo/cập nhật đầu ra tại `out/artifacts/exe_output_app/`. Cần có JDK gồm `jpackage`; nếu Maven có trong `PATH`, script sẽ dùng Maven để biên dịch và sao chép dependency. Nếu không, script biên dịch bằng JDK và dùng các JAR JavaFX đã có trong thư mục đầu vào.
 
-Sau khi chạy thành công, ứng dụng được tạo trong `out/artifacts/exe_output/DuTu Goods Manager/`. Chạy `DuTu Goods Manager.exe` trong thư mục này; cần giữ nguyên toàn bộ thư mục vì nó bao gồm Java runtime cùng các tệp cần thiết. Có thể chạy lại script để cập nhật bản đóng gói hiện có.
+Sau khi chạy thành công, mở `out/artifacts/exe_output_app/DuTu Goods Manager/DuTu Goods Manager.exe`. Giữ nguyên toàn bộ thư mục app-image vì thư mục chứa Java runtime và các thư viện cần thiết. Có thể chạy lại script để cập nhật bản đóng gói.
 
 ## 📋 Trạng Thái Phát Triển (Roadmap)
 
@@ -147,6 +153,9 @@ Sau khi chạy thành công, ứng dụng được tạo trong `out/artifacts/ex
 - [x] Triển khai giao diện Web UI tông Tím Hồng & Vàng Cát với SVG Icon chuẩn thương hiệu.
 - [x] Xử lý cơ chế lô HSD theo chuẩn FIFO & Thùng rác khôi phục nợ 20 mục.
 - [x] Tích hợp cảnh báo an toàn (`confirm`) & hỗ trợ 2 chế độ nhập giá vốn.
+- [x] Cảnh báo nợ quá hạn với ngày ghi nợ có thể chỉnh sửa và ngưỡng cảnh báo lưu trong JSON.
+- [x] Hỗ trợ bật/tắt khởi động cùng máy tính trên Windows và Linux.
+- [x] Gán biểu tượng `DuTu.ico` cho cửa sổ JavaFX và bản đóng gói Windows.
 - [x] Tích hợp Module lưu trữ dữ liệu tự động ra tệp tin JSON/Text đĩa cục bộ.
 - [x] Đóng gói phần mềm thành file thực thi `.exe` / `.jar` chạy 1-click cho người dùng cuối.
 

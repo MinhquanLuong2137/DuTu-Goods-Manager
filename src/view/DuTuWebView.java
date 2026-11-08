@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import model.*;
 import service.LedgerService;
+import service.AutostartService;
 import service.PersistenceService;
 import service.ProductService;
 
@@ -17,10 +18,13 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DuTuWebView {
     private final ProductService productService;
     private final LedgerService ledgerService;
+    private final AutostartService autostartService = new AutostartService();
     private final int port;
 
     public DuTuWebView(ProductService productService, LedgerService ledgerService, int port) {
@@ -44,9 +48,11 @@ public class DuTuWebView {
             server.createContext("/stock/restock", this::handleRestock);
             server.createContext("/debt/add", this::handleAddDebt);
             server.createContext("/debt/edit", this::handleEditDebt);
+            server.createContext("/debt/settings", this::handleDebtSettings);
             server.createContext("/debt/pay", this::handlePayDebt);
             server.createContext("/debt/restore", this::handleRestoreDebt);
             server.createContext("/closing/add", this::handleAddClosing);
+            server.createContext("/api/autostart", this::handleAutostart);
 
             server.setExecutor(null);
             server.start();
@@ -58,6 +64,71 @@ public class DuTuWebView {
         } catch (Exception e) {
             System.out.println("[!] Khong the khoi dong Web Server: " + e.getMessage());
         }
+    }
+
+    private void handleAutostart(HttpExchange exchange) throws IOException {
+        if (!exchange.getRemoteAddress().getAddress().isLoopbackAddress()) {
+            sendJson(exchange, 403, "{\"error\":\"Local access only.\"}");
+            return;
+        }
+
+        try {
+            if ("GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+                sendJson(exchange, 200, "{\"enabled\":" + autostartService.isEnabled() + "}");
+            } else if ("POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                String origin = exchange.getRequestHeaders().getFirst("Origin");
+                if (origin != null && !isLocalOrigin(origin)) {
+                    sendJson(exchange, 403, "{\"error\":\"Cross-origin requests are not allowed.\"}");
+                    return;
+                }
+                String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
+                String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+                String enabledValue;
+                if (contentType != null && contentType.toLowerCase().startsWith("application/json")) {
+                    Matcher matcher = Pattern.compile("^\\s*\\{\\s*\"enabled\"\\s*:\\s*(true|false)\\s*}\\s*$")
+                            .matcher(body);
+                    enabledValue = matcher.matches() ? matcher.group(1) : null;
+                } else {
+                    enabledValue = parseUrlEncoded(body).get("enabled");
+                }
+                if (!"true".equalsIgnoreCase(enabledValue) && !"false".equalsIgnoreCase(enabledValue)) {
+                    sendJson(exchange, 400, "{\"error\":\"Expected enabled=true or enabled=false.\"}");
+                    return;
+                }
+                autostartService.setEnabled(Boolean.parseBoolean(enabledValue));
+                sendJson(exchange, 200, "{\"enabled\":" + autostartService.isEnabled() + "}");
+            } else {
+                exchange.getResponseHeaders().set("Allow", "GET, POST");
+                sendJson(exchange, 405, "{\"error\":\"Method not allowed.\"}");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            sendJson(exchange, 500, "{\"error\":\"Autostart operation was interrupted.\"}");
+        } catch (IOException e) {
+            sendJson(exchange, 500, "{\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
+        }
+    }
+
+    private boolean isLocalOrigin(String origin) {
+        return origin.equals("http://localhost:" + port)
+                || origin.equals("http://127.0.0.1:" + port)
+                || origin.equals("http://[::1]:" + port);
+    }
+
+    private static void sendJson(HttpExchange exchange, int status, String body) throws IOException {
+        byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+        exchange.getResponseHeaders().set("Cache-Control", "no-store");
+        exchange.sendResponseHeaders(status, bytes.length);
+        try (OutputStream output = exchange.getResponseBody()) {
+            output.write(bytes);
+        }
+    }
+
+    private static String escapeJson(String value) {
+        if (value == null) return "";
+        return value.replace("\\", "\\\\").replace("\"", "\\\"")
+                .replace("\r", "\\r").replace("\n", "\\n");
     }
 
     private void handleDashboard(HttpExchange exchange) throws IOException {
@@ -248,9 +319,11 @@ public class DuTuWebView {
         String phoneOrAddress = form.getOrDefault("phoneOrAddress", "").trim();
         String itemsNote = form.getOrDefault("itemsNote", "").trim();
         double amount = parseDoubleOrDefault(form.get("amount"), 0);
+        String dateValue = form.getOrDefault("date", "");
+        LocalDate debtDate = dateValue.isBlank() ? LocalDate.now() : LocalDate.parse(dateValue);
 
         if (!customerName.isEmpty() && amount > 0) {
-            ledgerService.addDebt(customerName, phoneOrAddress, itemsNote, amount);
+            ledgerService.addDebt(customerName, phoneOrAddress, itemsNote, amount, debtDate);
             PersistenceService.saveData(productService, ledgerService, null);
             redirect(exchange, "so-no", "ALL", "Đã ghi sổ nợ cho: " + customerName);
         } else {
@@ -265,12 +338,25 @@ public class DuTuWebView {
         String phoneOrAddress = form.getOrDefault("phoneOrAddress", "").trim();
         String itemsNote = form.getOrDefault("itemsNote", "").trim();
         double amount = parseDoubleOrDefault(form.get("amount"), 0);
+        String dateValue = form.getOrDefault("date", "");
+        LocalDate debtDate = dateValue.isBlank() ? LocalDate.now() : LocalDate.parse(dateValue);
 
-        if (ledgerService.updateDebt(debtId, customerName, phoneOrAddress, itemsNote, amount)) {
+        if (ledgerService.updateDebt(debtId, customerName, phoneOrAddress, itemsNote, amount, debtDate)) {
             PersistenceService.saveData(productService, ledgerService, null);
             redirect(exchange, "so-no", "ALL", "Đã cập nhật thông tin khoản nợ #" + debtId);
         } else {
             redirect(exchange, "so-no", "ALL", "Không tìm thấy khoản nợ cần sửa!");
+        }
+    }
+
+    private void handleDebtSettings(HttpExchange exchange) throws IOException {
+        Map<String, String> form = parseForm(exchange);
+        int overdueDaysLimit = parseIntOrDefault(form.get("overdueDaysLimit"), -1);
+        if (ledgerService.setOverdueDaysLimit(overdueDaysLimit)) {
+            PersistenceService.saveData(productService, ledgerService, null);
+            redirect(exchange, "so-no", "ALL", "Đã cập nhật ngưỡng cảnh báo nợ quá hạn: " + overdueDaysLimit + " ngày.");
+        } else {
+            redirect(exchange, "so-no", "ALL", "Số ngày cảnh báo phải là số nguyên lớn hơn 0.");
         }
     }
 
@@ -376,6 +462,8 @@ public class DuTuWebView {
                     display: flex; align-items: center; gap: 8px;
                 }
                 .tab-btn.active { background: linear-gradient(135deg, var(--plum-main), var(--pink-accent)); color: white; border-color: var(--sand-gold); }
+                .tab-btn:not(.active):hover { color: var(--pink-accent); border-color: var(--pink-accent); }
+                .tab-icon { width: 20px; height: 20px; flex: 0 0 20px; display: block; }
                 .debt-view-tabs { display: flex; gap: 10px; margin: 0 0 16px; flex-wrap: wrap; }
                 .debt-view-panel { display: none; }
                 .debt-view-panel.active { display: block; }
@@ -410,6 +498,8 @@ public class DuTuWebView {
                 .badge-low { background: #FFE3E3; color: var(--danger); border: 1px solid var(--danger); }
                 .badge-slow { background: #FFF3CD; color: #996500; border: 1px solid #E6C280; }
                 .badge-exp { background: #F8D7DA; color: #842029; }
+                .badge-overdue { background: #FCE8E8; color: #B42318; border: 1px solid #D9383A; }
+                .warning-icon { width: 16px; height: 16px; vertical-align: -3px; flex: none; }
 
                 table { width: 100%; border-collapse: collapse; margin-top: 10px; }
                 th { background: var(--plum-dark); color: var(--sand-gold); padding: 12px; text-align: left; font-size: 16px; }
@@ -424,6 +514,15 @@ public class DuTuWebView {
                 .btn-danger { background: #FCE8E8; color: var(--danger); border: 1px solid var(--danger); }
                 .btn-success { background: var(--success); color: white; }
                 .btn-outline { background: white; border: 2px solid var(--plum-main); color: var(--plum-main); }
+                .app-settings-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 16px 20px; margin: 20px 0; background: var(--sand-card); border: 1px solid #EBDDC3; border-radius: 12px; }
+                .autostart-control { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; cursor: pointer; }
+                .autostart-control input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+                .autostart-switch { width: 46px; height: 26px; border-radius: 20px; background: #B8AA9A; position: relative; transition: background 0.2s; }
+                .autostart-switch::after { content: ''; position: absolute; width: 20px; height: 20px; border-radius: 50%; left: 3px; top: 3px; background: white; transition: transform 0.2s; }
+                .autostart-control input:checked + .autostart-switch { background: var(--success); }
+                .autostart-control input:checked + .autostart-switch::after { transform: translateX(20px); }
+                .autostart-control input:focus-visible + .autostart-switch { outline: 3px solid var(--plum-main); outline-offset: 2px; }
+                #autostartStatus { color: #665; font-size: 14px; }
                 .tab-section { display: none; }
                 .tab-section.active { display: block; }
                 .two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 22px; }
@@ -465,11 +564,11 @@ public class DuTuWebView {
 
         // Navigation có Icon đầy đủ
         sb.append("<nav>");
-        sb.append(renderTabButton("tra-gia", "🔍 1. Tra Giá & Kho", activeTab));
-        sb.append(renderTabButton("kiem-ke", "📋 2. Đếm Kệ & Nhập Hàng", activeTab));
-        sb.append(renderTabButton("canh-bao", "⚠️ 3. Sổ Cảnh Báo", activeTab));
-        sb.append(renderTabButton("so-no", "📓 4. Sổ Nợ Khách Hàng", activeTab));
-        sb.append(renderTabButton("so-cuoi-ngay", "💰 5. Sổ Cộng Tiền", activeTab));
+        sb.append(renderTabButton("tra-gia", "<circle cx='11' cy='11' r='7'/><path d='m20 20-4-4'/>", "1. Tra Giá & Kho", activeTab));
+        sb.append(renderTabButton("kiem-ke", "<rect x='5' y='4' width='14' height='17' rx='2'/><path d='M9 4.5h6M9 10h6M9 14h6'/>", "2. Đếm Kệ & Nhập Hàng", activeTab));
+        sb.append(renderTabButton("canh-bao", "<path d='m10.3 3.9-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3.1l-8-14a2 2 0 0 0-3.4 0Z'/><path d='M12 9v4m0 4h.01'/>", "3. Sổ Cảnh Báo", activeTab));
+        sb.append(renderTabButton("so-no", "<path d='M12 7v14M3 18V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13H5a2 2 0 0 0 0 4h16'/><path d='M7 7h2m4 0h6M7 11h2m4 0h6'/>", "4. Sổ Nợ Khách Hàng", activeTab));
+        sb.append(renderTabButton("so-cuoi-ngay", "<ellipse cx='12' cy='6' rx='8' ry='3'/><path d='M4 6v5c0 1.7 3.6 3 8 3 1.5 0 2.9-.2 4-.5M4 11v5c0 1.7 3.6 3 8 3'/><path d='M20 11v5c0 1.7-3.6 3-8 3m0-7c4.4 0 8-1.3 8-3s-3.6-3-8-3'/>", "5. Sổ Cộng Tiền", activeTab));
         sb.append("</nav>");
 
         sb.append("<div class='container'>");
@@ -487,7 +586,7 @@ public class DuTuWebView {
         sb.append("</div>");
 
         sb.append("<div id='tab-canh-bao' class='tab-section ").append("canh-bao".equals(activeTab) ? "active" : "").append("'>");
-        sb.append(renderCanhBaoTab(lowStock, expiringSoon, slowMoving, topSelling));
+        sb.append(renderCanhBaoTab(lowStock, expiringSoon, slowMoving, topSelling, ledgerService.getOverdueDebts()));
         sb.append("</div>");
 
         sb.append("<div id='tab-so-no' class='tab-section ").append("so-no".equals(activeTab) ? "active" : "").append("'>");
@@ -498,6 +597,12 @@ public class DuTuWebView {
         sb.append(renderSoCuoiNgayTab());
         sb.append("</div>");
 
+        sb.append("<footer class='app-settings-footer'><label class='autostart-control' for='autostartToggle'>")
+                .append("<input type='checkbox' id='autostartToggle' aria-label='Khởi động cùng máy tính' disabled>")
+                .append("<span class='autostart-switch' aria-hidden='true'></span>")
+                .append("<span>Khởi động cùng máy tính</span></label>")
+                .append("<span id='autostartStatus' role='status' aria-live='polite'>Đang tải cài đặt...</span></footer>");
+
         sb.append(renderEditModal());
         sb.append(renderEditDebtModal());
 
@@ -506,6 +611,46 @@ public class DuTuWebView {
         // JavaScript hỗ trợ
         sb.append("""
         <script>
+            const autostartToggle = document.getElementById('autostartToggle');
+            const autostartStatus = document.getElementById('autostartStatus');
+
+            async function loadAutostartSetting() {
+                try {
+                    const response = await fetch('/api/autostart');
+                    const setting = await response.json();
+                    if (!response.ok) throw new Error(setting.error || 'Không thể tải cài đặt.');
+                    autostartToggle.checked = setting.enabled;
+                    autostartStatus.textContent = setting.enabled ? 'Đã bật' : 'Đã tắt';
+                } catch (error) {
+                    autostartStatus.textContent = error.message;
+                } finally {
+                    autostartToggle.disabled = false;
+                }
+            }
+
+            autostartToggle.addEventListener('change', async () => {
+                const requestedValue = autostartToggle.checked;
+                autostartToggle.disabled = true;
+                autostartStatus.textContent = 'Đang cập nhật...';
+                try {
+                    const response = await fetch('/api/autostart', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ enabled: requestedValue })
+                    });
+                    const setting = await response.json();
+                    if (!response.ok) throw new Error(setting.error || 'Không thể cập nhật cài đặt.');
+                    autostartToggle.checked = setting.enabled;
+                    autostartStatus.textContent = setting.enabled ? 'Đã bật' : 'Đã tắt';
+                } catch (error) {
+                    autostartToggle.checked = !requestedValue;
+                    autostartStatus.textContent = error.message;
+                } finally {
+                    autostartToggle.disabled = false;
+                }
+            });
+            loadAutostartSetting();
+
             function formatCurrencyInput(element) {
                 const digits = element.value.replace(/\\D/g, '');
                 element.value = digits ? Number(digits).toLocaleString('vi-VN') : '';
@@ -596,12 +741,13 @@ public class DuTuWebView {
 
             function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
 
-            function openEditDebtModal(id, name, phone, items, amount) {
+            function openEditDebtModal(id, name, phone, items, amount, date) {
                 document.getElementById('editDebtId').value = id;
                 document.getElementById('editCustomerName').value = name;
                 document.getElementById('editPhoneOrAddress').value = phone;
                 document.getElementById('editItemsNote').value = items;
                 document.getElementById('editDebtAmount').value = amount;
+                document.getElementById('editDebtDate').value = date;
                 formatCurrencyInput(document.getElementById('editDebtAmount'));
                 document.getElementById('editDebtModal').style.display = 'block';
             }
@@ -612,9 +758,19 @@ public class DuTuWebView {
         return sb.toString();
     }
 
-    private String renderTabButton(String tabId, String label, String activeTab) {
+    private String renderTabButton(String tabId, String iconMarkup, String label, String activeTab) {
         String activeClass = tabId.equals(activeTab) ? "active" : "";
-        return "<button type='button' class='tab-btn " + activeClass + "' onclick=\"switchTab('" + tabId + "', this)\">" + label + "</button>";
+        return "<button type='button' class='tab-btn " + activeClass + "' onclick=\"switchTab('" + tabId + "', this)\">"
+                + "<svg class='tab-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' "
+                + "stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'>" + iconMarkup + "</svg>"
+                + label + "</button>";
+    }
+
+    private String warningIconSvg() {
+        return "<svg class='warning-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' "
+                + "stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true' focusable='false'>"
+                + "<path d='M10.3 3.9 2.4 17.7A2 2 0 0 0 4.1 20.7h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z'/>"
+                + "<path d='M12 9v4m0 4h.01'/></svg>";
     }
 
     private String renderTraGiaTab(List<Product> products, List<String> shelves) {
@@ -685,7 +841,7 @@ public class DuTuWebView {
                     .append("data-location='").append(escapeHtml(p.getLocation())).append("' ")
                     .append("data-minstock='").append(p.getMinStock()).append("' ")
                     .append("data-expiry='").append(expDateStr).append("' ")
-                    .append("onclick='openEditModal(this)'>✏️ Sửa</button>");
+                    .append("onclick='openEditModal(this)'>Sửa</button>");
 
             sb.append("<form method='POST' action='/product/delete' style='flex:1; margin:0;' ")
                     .append("onsubmit=\"return confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa mặt hàng [" + escapeHtml(p.getName()) + "] khỏi kho không?');\">")
@@ -776,7 +932,7 @@ public class DuTuWebView {
         <div id="editModal" class="modal">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--sand-gold); padding-bottom:8px; margin-bottom:14px;">
-                    <h3 style="margin:0; color:var(--plum-dark);">✏️ Chỉnh Sửa Thông Tin Mặt Hàng</h3>
+                    <h3 style="margin:0; color:var(--plum-dark);">Chỉnh Sửa Thông Tin Mặt Hàng</h3>
                     <button type="button" class="btn btn-outline" onclick="closeEditModal()" style="padding:4px 10px;">✖ Đóng</button>
                 </div>
                 <form method="POST" action="/product/edit">
@@ -862,9 +1018,25 @@ public class DuTuWebView {
     }
 
     private String renderCanhBaoTab(List<Product> lowStock, List<ExpiringProduct> expiringSoon,
-                                    List<Product> slowMoving, List<Product> topSelling) {
+                                    List<Product> slowMoving, List<Product> topSelling,
+                                    List<DebtRecord> overdueDebts) {
         StringBuilder sb = new StringBuilder();
         sb.append("<div class='two-col'>");
+
+        sb.append("<div class='card'>");
+        sb.append("<h3 class='card-header'>").append(warningIconSvg()).append(" Các Khoản Nợ Quá Hạn (trên ")
+                .append(ledgerService.getOverdueDaysLimit()).append(" ngày)</h3>");
+        sb.append("<table><thead><tr><th>Khách hàng</th><th>Ngày ghi nợ</th><th>Quá hạn</th><th>Số tiền</th><th>Chi tiết</th></tr></thead><tbody>");
+        for (DebtRecord debt : overdueDebts) {
+            sb.append("<tr><td><strong>").append(escapeHtml(debt.getCustomerName())).append("</strong><br><small>")
+                    .append(escapeHtml(debt.getPhoneOrAddress())).append("</small></td>")
+                    .append("<td>").append(debt.getDate()).append("</td>")
+                    .append("<td><span class='badge badge-overdue'>").append(warningIconSvg()).append(" Trễ ")
+                    .append(ledgerService.getDebtAgeInDays(debt)).append(" ngày</span></td>")
+                    .append("<td style='font-weight:800;color:var(--danger);'>").append(formatMoney(debt.getAmount())).append(" đ</td>")
+                    .append("<td>").append(escapeHtml(debt.getItemsNote())).append("</td></tr>");
+        }
+        sb.append("</tbody></table></div>");
 
         sb.append("<div class='card'>");
         sb.append("<h3 class='card-header'>🚨 Sổ Hàng Sắp Hết (Cần gọi đại lý)</h3>");
@@ -916,6 +1088,11 @@ public class DuTuWebView {
         sb.append("<h2 class='card-header'><span>📓 Sổ Nợ Khách Mua Chịu</span>")
                 .append("<span>Tổng nợ chưa thu: <strong style='color:var(--danger);'>")
                 .append(formatMoney(ledgerService.getTotalUnpaidDebt())).append(" đ</strong></span></h2>");
+        sb.append("<form method='POST' action='/debt/settings' style='display:flex;align-items:end;gap:8px;flex-wrap:wrap;margin-bottom:18px;'>")
+                .append("<div style='max-width:250px;'><label for='overdueDaysLimit'>Cảnh báo quá hạn sau (ngày):</label>")
+                .append("<input type='number' id='overdueDaysLimit' name='overdueDaysLimit' min='1' required value='")
+                .append(ledgerService.getOverdueDaysLimit()).append("'></div>")
+                .append("<button type='submit' class='btn btn-sand'>Lưu ngưỡng</button></form>");
 
         sb.append("<datalist id='debtorSuggestions'>");
         for (String name : ledgerService.getDebtorSuggestions()) {
@@ -927,6 +1104,8 @@ public class DuTuWebView {
         sb.append("<div><label>Tên khách hàng:</label><input type='text' name='customerName' list='debtorSuggestions' placeholder='VD: Khách A' autocomplete='on' required></div>");
         sb.append("<div><label>SĐT hoặc Địa chỉ:</label><input type='text' name='phoneOrAddress' placeholder='VD: Nhà số 0'></div>");
         sb.append("<div><label>Số tiền nợ (đ):</label><input type='text' class='currency-input' inputmode='numeric' name='amount' placeholder='VD: 125.000' required></div>");
+        sb.append("<div><label>Ngày ghi nợ:</label><input type='date' id='debtDate' name='date' value='")
+                .append(LocalDate.now()).append("' required></div>");
         sb.append("<div style='grid-column: 1 / -1;'><label>Chi tiết mặt hàng (Ghi chú):</label><input type='text' name='itemsNote' placeholder='VD: 1 thùng bia, 2 chai dầu ăn' required></div>");
         sb.append("</div>");
         sb.append("<div style='margin-top:14px;'><button type='submit' class='btn btn-primary' onclick=\"return confirm('Xác nhận ghi sổ nợ mới?');\">✍️ Ghi Vào Sổ Nợ</button></div>");
@@ -940,18 +1119,26 @@ public class DuTuWebView {
         sb.append("<div id='debtTransactionsView' class='debt-view-panel active'>");
         sb.append("<div class='card'>");
         sb.append("<h3 class='card-header'>Danh Sách Khoản Nợ Chưa Trả</h3>");
-        sb.append("<table><thead><tr><th>Ngày giờ</th><th>Khách hàng</th><th>Mặt hàng lấy chịu</th><th>Số tiền nợ</th><th>Thao tác</th></tr></thead><tbody>");
+        sb.append("<table><thead><tr><th>Ngày ghi nợ</th><th>Tình trạng</th><th>Khách hàng</th><th>Mặt hàng lấy chịu</th><th>Số tiền nợ</th><th>Thao tác</th></tr></thead><tbody>");
         for (DebtRecord d : ledgerService.getAllDebts()) {
             sb.append("<tr>");
-            sb.append("<td><strong>").append(d.getFormattedDate()).append("</strong></td>");
+            sb.append("<td><strong>").append(d.getDate()).append("</strong></td>");
+            sb.append("<td>");
+            if (ledgerService.isDebtOverdue(d)) {
+                sb.append("<span class='badge badge-overdue'>").append(warningIconSvg()).append(" Trễ ")
+                        .append(ledgerService.getDebtAgeInDays(d)).append(" ngày</span>");
+            } else {
+                sb.append("<span class='badge badge-shelf'>Trong hạn</span>");
+            }
+            sb.append("</td>");
             sb.append("<td><strong>").append(escapeHtml(d.getCustomerName())).append("</strong><br><small>").append(escapeHtml(d.getPhoneOrAddress())).append("</small></td>");
             sb.append("<td>").append(escapeHtml(d.getItemsNote())).append("</td>");
             sb.append("<td style='font-size:20px; font-weight:800; color:var(--danger);'>").append(formatMoney(d.getAmount())).append(" đ</td>");
             sb.append("<td style='display:flex; gap:6px;'>");
-            sb.append("<button type='button' class='btn btn-outline' onclick=\"openEditDebtModal(").append(d.getId()).append(", '").append(escapeHtml(d.getCustomerName())).append("', '").append(escapeHtml(d.getPhoneOrAddress())).append("', '").append(escapeHtml(d.getItemsNote())).append("', ").append(d.getAmount()).append(")\">✏️ Sửa</button>");
+            sb.append("<button type='button' class='btn btn-outline' onclick=\"openEditDebtModal(").append(d.getId()).append(", '").append(escapeHtml(d.getCustomerName())).append("', '").append(escapeHtml(d.getPhoneOrAddress())).append("', '").append(escapeHtml(d.getItemsNote())).append("', ").append(d.getAmount()).append(", '").append(d.getDate()).append("')\">Sửa</button>");
             sb.append("<form method='POST' action='/debt/pay' style='margin:0;' onsubmit=\"return confirm('Xác nhận khách [" + escapeHtml(d.getCustomerName()) + "] đã trả hết nợ?');\">")
                     .append("<input type='hidden' name='debtId' value='").append(d.getId()).append("'>")
-                    .append("<button type='submit' class='btn btn-success'>✔️ Đã trả</button></form>");
+                    .append("<button type='submit' class='btn btn-success'>✔Đã trả</button></form>");
             sb.append("</td></tr>");
         }
         sb.append("</tbody></table></div>");
@@ -973,9 +1160,9 @@ public class DuTuWebView {
                     .append("<td>").append(debtor.debts().size()).append(" lượt</td></tr>");
             sb.append("<tr><td colspan='4' style='padding:0;'>")
                     .append("<details id='").append(detailsId).append("'><summary style='padding:10px 14px;cursor:pointer;color:var(--plum-main);'>Xem chi tiết các khoản nợ</summary>")
-                    .append("<table style='margin:0;'><thead><tr><th>Ngày giờ</th><th>Chi tiết mặt hàng</th><th>Số tiền</th></tr></thead><tbody>");
+                    .append("<table style='margin:0;'><thead><tr><th>Ngày ghi nợ</th><th>Chi tiết mặt hàng</th><th>Số tiền</th></tr></thead><tbody>");
             for (DebtRecord debt : debtor.debts()) {
-                sb.append("<tr><td>").append(escapeHtml(debt.getFormattedDate())).append("</td>")
+                sb.append("<tr><td>").append(debt.getDate()).append("</td>")
                         .append("<td>").append(escapeHtml(debt.getItemsNote())).append("</td>")
                         .append("<td>").append(formatMoney(debt.getAmount())).append(" đ</td></tr>");
             }
@@ -1009,7 +1196,7 @@ public class DuTuWebView {
         <div id="editDebtModal" class="modal">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--sand-gold); padding-bottom:8px; margin-bottom:14px;">
-                    <h3 style="margin:0; color:var(--plum-dark);">✏️ Chỉnh Sửa Khoản Nợ Khách Hàng</h3>
+                    <h3 style="margin:0; color:var(--plum-dark);">Chỉnh Sửa Khoản Nợ Khách Hàng</h3>
                     <button type="button" class="btn btn-outline" onclick="closeEditDebtModal()" style="padding:4px 10px;">✖ Đóng</button>
                 </div>
                 <form method="POST" action="/debt/edit">
@@ -1018,6 +1205,7 @@ public class DuTuWebView {
                         <div><label>Tên khách:</label><input type="text" id="editCustomerName" name="customerName" required></div>
                         <div><label>SĐT / Địa chỉ:</label><input type="text" id="editPhoneOrAddress" name="phoneOrAddress"></div>
                         <div><label>Số tiền nợ (đ):</label><input type="text" class="currency-input" inputmode="numeric" id="editDebtAmount" name="amount" required></div>
+                        <div><label>Ngày ghi nợ:</label><input type="date" id="editDebtDate" name="date" required></div>
                         <div style="grid-column: 1 / -1;"><label>Chi tiết mặt hàng:</label><input type="text" id="editItemsNote" name="itemsNote" required></div>
                     </div>
                     <div style="margin-top:18px; display:flex; gap:10px;">
@@ -1064,8 +1252,9 @@ public class DuTuWebView {
             sb.append("<td>").append(formatMoney(c.getTransferAmount())).append(" đ</td>");
             sb.append("<td style='font-weight:800; color:var(--plum-main);'>").append(formatMoney(c.getTotalRevenue())).append(" đ</td>");
             sb.append("<td style='color:var(--danger);'>-").append(formatMoney(c.getImportExpense())).append(" đ</td>");
-            sb.append("<td style='font-size:19px; font-weight:900; color:").append(isNegative ? "var(--danger)" : "var(--success)").append(";'>")
-                    .append(isNegative ? "⚠️ -" : "+").append(formatMoney(Math.abs(net))).append(" đ</td>");
+            sb.append("<td style='font-size:19px; font-weight:900; color:").append(isNegative ? "var(--danger)" : "var(--success)").append(";'>");
+            if (isNegative) sb.append(warningIconSvg()).append(" ");
+            sb.append(isNegative ? "-" : "+").append(formatMoney(Math.abs(net))).append(" đ</td>");
             sb.append("<td>").append(escapeHtml(c.getNote())).append("</td>");
             sb.append("</tr>");
         }

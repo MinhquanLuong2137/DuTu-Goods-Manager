@@ -23,7 +23,8 @@ public class PersistenceService {
 
     public static boolean saveData(ProductService productService, LedgerService ledgerService, String customPath) {
         String filePath = (customPath != null && !customPath.isBlank()) ? customPath : getDefaultFilePath();
-        StringBuilder json = new StringBuilder("{\n  \"initialized\": true,\n");
+        StringBuilder json = new StringBuilder("{\n  \"initialized\": true,\n")
+                .append("  \"overdueDaysLimit\": ").append(ledgerService.getOverdueDaysLimit()).append(",\n");
 
         json.append("  \"locations\": ");
         appendStringArray(json, productService.getAllLocations());
@@ -129,6 +130,7 @@ public class PersistenceService {
 
         Object parsed = new JsonParser(Files.readString(path, StandardCharsets.UTF_8)).parse();
         Map<String, Object> root = asObject(parsed, "database");
+        ledgerService.loadOverdueDaysLimit(integer(root, "overdueDaysLimit", 14));
         loadLocations(root, productService);
         loadProducts(root, productService);
         loadDebts(root, ledgerService, "debts", false);
@@ -194,6 +196,12 @@ public class PersistenceService {
                     string(item, "itemsNote", ""), decimal(item, "amount", 0));
             String createdAt = string(item, "createdAt", "");
             if (!createdAt.isBlank()) debt.setCreatedAt(LocalDateTime.parse(createdAt));
+            String debtDate = string(item, "date", "");
+            if (!debtDate.isBlank()) {
+                debt.setDate(LocalDate.parse(debtDate));
+            } else if (!createdAt.isBlank()) {
+                debt.setDate(LocalDateTime.parse(createdAt).toLocalDate());
+            }
             debt.setPaid(Boolean.TRUE.equals(item.get("paid")));
             if (deleted) ledgerService.loadDeletedDebt(debt);
             else ledgerService.loadDebt(debt);
@@ -236,6 +244,7 @@ public class PersistenceService {
                     .append(", \"itemsNote\": ").append(jsonString(debt.getItemsNote()))
                     .append(", \"amount\": ").append(debt.getAmount())
                     .append(", \"paid\": ").append(debt.isPaid())
+                    .append(", \"date\": ").append(jsonString(debt.getDate().toString()))
                     .append(", \"createdAt\": ").append(jsonString(debt.getCreatedAt().toString())).append("}");
         }
         if (!debts.isEmpty()) json.append('\n').append("  ");

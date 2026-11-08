@@ -1,6 +1,7 @@
 package model;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
@@ -11,15 +12,21 @@ public class DebtRecord {
     private String itemsNote;      // Ghi chú mặt hàng tự do
     private double amount;         // Số tiền nợ
     private LocalDateTime createdAt;
+    private LocalDate date;
     private boolean paid;
 
     public DebtRecord(int id, String customerName, String phoneOrAddress, String itemsNote, double amount) {
+        this(id, customerName, phoneOrAddress, itemsNote, amount, LocalDate.now());
+    }
+
+    public DebtRecord(int id, String customerName, String phoneOrAddress, String itemsNote, double amount, LocalDate date) {
         this.id = id;
         this.customerName = customerName;
         this.phoneOrAddress = phoneOrAddress;
         this.itemsNote = itemsNote;
         this.amount = Math.max(0, amount);
         this.createdAt = LocalDateTime.now();
+        this.date = date == null ? LocalDate.now() : date;
         this.paid = false;
     }
 
@@ -33,12 +40,16 @@ public class DebtRecord {
     public String getItemsNote() { return itemsNote; }
     public double getAmount() { return amount; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDate getDate() { return date; }
     public boolean isPaid() { return paid; }
 
     // Setters (Đã bổ sung đầy đủ để sửa lỗi)
     public void setId(int id) { this.id = id; }
     public void setCreatedAt(LocalDateTime createdAt) {
         if (createdAt != null) this.createdAt = createdAt;
+    }
+    public void setDate(LocalDate date) {
+        if (date != null) this.date = date;
     }
     public void setCustomerName(String customerName) {
         if (customerName != null && !customerName.isBlank()) {

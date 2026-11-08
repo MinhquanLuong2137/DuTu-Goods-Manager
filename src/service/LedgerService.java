@@ -8,6 +8,7 @@ import model.StockLog;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -28,24 +29,58 @@ public class LedgerService {
     private int debtIdSeq = 1;
     private int logIdSeq = 1;
     private int closingIdSeq = 1;
+    private int overdueDaysLimit = 14;
 
     public DebtRecord addDebt(String customerName, String phoneOrAddress, String itemsNote, double amount) {
-        DebtRecord record = new DebtRecord(debtIdSeq++, customerName, phoneOrAddress, itemsNote, amount);
+        return addDebt(customerName, phoneOrAddress, itemsNote, amount, LocalDate.now());
+    }
+
+    public DebtRecord addDebt(String customerName, String phoneOrAddress, String itemsNote, double amount, LocalDate date) {
+        DebtRecord record = new DebtRecord(debtIdSeq++, customerName, phoneOrAddress, itemsNote, amount, date);
         debtBook.add(0, record);
         return record;
     }
 
     public boolean updateDebt(int debtId, String customerName, String phoneOrAddress, String itemsNote, double amount) {
+        return updateDebt(debtId, customerName, phoneOrAddress, itemsNote, amount, null);
+    }
+
+    public boolean updateDebt(int debtId, String customerName, String phoneOrAddress, String itemsNote, double amount, LocalDate date) {
         for (DebtRecord d : debtBook) {
             if (d.getId() == debtId) {
                 d.setCustomerName(customerName);
                 d.setPhoneOrAddress(phoneOrAddress);
                 d.setItemsNote(itemsNote);
                 d.setAmount(amount);
+                d.setDate(date);
                 return true;
             }
         }
         return false;
+    }
+
+    public boolean isDebtOverdue(DebtRecord debt) {
+        return !debt.isPaid() && getDebtAgeInDays(debt) > overdueDaysLimit;
+    }
+
+    public long getDebtAgeInDays(DebtRecord debt) {
+        return Math.max(0, ChronoUnit.DAYS.between(debt.getDate(), LocalDate.now()));
+    }
+
+    public List<DebtRecord> getOverdueDebts() {
+        return getAllDebts().stream().filter(this::isDebtOverdue).toList();
+    }
+
+    public int getOverdueDaysLimit() { return overdueDaysLimit; }
+
+    public boolean setOverdueDaysLimit(int overdueDaysLimit) {
+        if (overdueDaysLimit < 1) return false;
+        this.overdueDaysLimit = overdueDaysLimit;
+        return true;
+    }
+
+    public void loadOverdueDaysLimit(int overdueDaysLimit) {
+        if (overdueDaysLimit >= 1) this.overdueDaysLimit = overdueDaysLimit;
     }
 
     public boolean markDebtPaidOrRemove(int debtId) {

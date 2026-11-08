@@ -38,3 +38,4 @@ META-INF/
 
 *.iml
 *.exe
+et --hard HEAD@{1}
