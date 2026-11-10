@@ -12,7 +12,7 @@
 [![Java Version](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](#)
 [![Architecture](https://img.shields.io/badge/Architecture-3--Tier%20(MVC)-7B2869?style=for-the-badge)](#)
 [![UI Theme](https://img.shields.io/badge/UI%20Theme-Plum%20Pink%20%26%20Sand%20Gold-C84B83?style=for-the-badge)](#)
-[![Status](https://img.shields.io/badge/Status-Demo%20Ready-1F8A5B?style=for-the-badge)](#)
+[![Status](https://img.shields.io/badge/Status-Releases%20Ready-1F8A5B?style=for-the-badge)](#)
 [![License](https://img.shields.io/badge/License-MIT-4169E1?style=for-the-badge)](#)
 
 </div>
